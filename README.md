@@ -1,1 +1,1 @@
-# Minecraft-Bedrock-Manager-Go
+# Minecraft-Bedrock-Manager-CSharp
