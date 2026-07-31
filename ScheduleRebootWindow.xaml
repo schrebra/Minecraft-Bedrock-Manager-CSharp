@@ -1,0 +1,53 @@
+<Window x:Class="BedrockServerManager.ScheduleRebootWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Configure Scheduled Reboot" Height="350" Width="400"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Background="#24273A">
+    <Window.Resources>
+        <SolidColorBrush x:Key="BgCard" Color="#363A4F"/>
+        <SolidColorBrush x:Key="BgInput" Color="#494D64"/>
+        <SolidColorBrush x:Key="BorderDefault" Color="#5B6078"/>
+        <SolidColorBrush x:Key="TextPrimary" Color="#CAD3F5"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#B8C0E0"/>
+        <SolidColorBrush x:Key="TextMuted" Color="#A5ADCB"/>
+        <SolidColorBrush x:Key="AccentBlue" Color="#8AADF4"/>
+        <SolidColorBrush x:Key="AccentGreen" Color="#A6DA95"/>
+    </Window.Resources>
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Text="Minecraft Bedrock Server Settings" FontWeight="Bold" FontSize="14" Margin="0,0,0,10" Foreground="{StaticResource TextPrimary}"/>
+        <GroupBox Grid.Row="1" Header="Scheduled Restart" Padding="10" Background="{StaticResource BgCard}" BorderBrush="{StaticResource BorderDefault}" Foreground="{StaticResource TextPrimary}">
+            <StackPanel>
+                <CheckBox Name="chkEnableRestart" Content="Enable Scheduled Reboot" IsChecked="True" Margin="0,0,0,10" Foreground="{StaticResource TextSecondary}"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <RadioButton Name="rbDaily" Content="Daily" IsChecked="True" Margin="0,0,15,0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                    <RadioButton Name="rbWeekly" Content="Weekly" Margin="0,0,15,0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                    <RadioButton Name="rbBiweekly" Content="Biweekly" Margin="0,0,15,0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                    <RadioButton Name="rbMonthly" Content="Monthly" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <Label Name="lblDate" Content="Day:" Width="90" Padding="0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                    <ComboBox Name="cbDate" Width="100" IsEnabled="False" Background="{StaticResource BgInput}" Foreground="{StaticResource TextPrimary}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <Label Content="Time:" Width="90" Padding="0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                    <ComboBox Name="cbHour" Width="50" Background="{StaticResource BgInput}" Foreground="{StaticResource TextPrimary}"/>
+                    <Label Content=":" VerticalAlignment="Center" Margin="2,0,2,0" Foreground="{StaticResource TextSecondary}"/>
+                    <ComboBox Name="cbMinute" Width="50" Background="{StaticResource BgInput}" Foreground="{StaticResource TextPrimary}"/>
+                    <TextBlock Text="(24h format)" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="{StaticResource TextMuted}"/>
+                </StackPanel>
+                <Border BorderBrush="{StaticResource BorderDefault}" BorderThickness="0,1,0,0" Padding="0,10,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Next Scheduled Reboot:" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextPrimary}"/>
+                        <TextBlock Name="txtNextReboot" Text=" N/A" VerticalAlignment="Center" Margin="5,0,0,0" Foreground="{StaticResource AccentBlue}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </GroupBox>
+        <Button Name="btnSave" Grid.Row="2" Content="Save Configuration" HorizontalAlignment="Right" Width="120" Padding="5" Margin="0,10,0,0" Background="{StaticResource AccentGreen}" Foreground="#24273A" FontWeight="SemiBold"/>
+    </Grid>
+</Window>
