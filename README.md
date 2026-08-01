@@ -3,7 +3,6 @@
 
 A modern, feature-rich desktop application built with .NET 8 and WPF designed to automate the management of the Minecraft Bedrock Dedicated Server on Windows. It wraps the server process, providing a beautiful graphical interface, dual console layout, automated updates, backups, and crash recovery—optimized for long-term stability (weeks or months of uptime).
 
-<img width="60%" alt="image" src="https://github.com/user-attachments/assets/cbe39987-c511-4d80-a266-0bccdd2819f4" />
 
 
 ## 🌟 Features
