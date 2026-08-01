@@ -6,8 +6,8 @@ A modern, feature-rich desktop application built with .NET 8 and WPF designed to
 <table>
   <tr>
     <td align="center">
-      <a href="Screenshots/2026-08-01_113150.png">
-        <img src="Screenshots/2026-08-01_113150.png" alt="Minecraft Bedrock Manager Screenshot 1" width="100%" />
+      <a href="Screenshots/2026-08-01_162526.png">
+        <img src="Screenshots/2026-08-01_162526.png" alt="Minecraft Bedrock Manager Screenshot 1" width="100%" />
       </a>
     </td>
     <td align="center">
