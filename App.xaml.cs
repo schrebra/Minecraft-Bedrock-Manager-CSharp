@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Win32;
 
@@ -11,7 +12,7 @@ public partial class App : System.Windows.Application
 {
     public static string[] StartupArgs { get; private set; }
 
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
         StartupArgs = e.Args;
         
@@ -30,10 +31,15 @@ public partial class App : System.Windows.Application
                 {
                     var url = "https://aka.ms/vs/17/release/vc_redist.x64.exe";
                     var tempFile = Path.Combine(Path.GetTempPath(), "vc_redist.x64.exe");
-                    using (var client = new System.Net.WebClient())
+                    
+                    // Use HttpClient instead of WebClient
+                    using var http = new HttpClient();
+                    using (var resp = await http.GetAsync(url))
+                    using (var fs = File.Create(tempFile))
                     {
-                        client.DownloadFile(url, tempFile);
+                        await resp.Content.CopyToAsync(fs);
                     }
+
                     var proc = Process.Start(tempFile, "/install /passive /norestart");
                     proc.WaitForExit();
                     System.Windows.MessageBox.Show("Visual C++ Redistributable installed successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);

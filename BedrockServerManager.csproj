@@ -7,8 +7,16 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    
+    <!-- Embeds the icon into the compiled EXE file for Windows Explorer -->
+    <ApplicationIcon>minecraft.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Management" Version="8.0.0" />
+  </ItemGroup>
+  
+  <!-- Explicitly embeds the icon as a WPF resource so the Window can load it -->
+  <ItemGroup>
+    <Resource Include="minecraft.ico" />
   </ItemGroup>
 </Project>

@@ -12,6 +12,11 @@
         <SolidColorBrush x:Key="TextMuted" Color="#A5ADCB"/>
         <SolidColorBrush x:Key="AccentBlue" Color="#8AADF4"/>
         <SolidColorBrush x:Key="AccentGreen" Color="#A6DA95"/>
+        
+        <!-- Style to force drop-down list items to have black text -->
+        <Style x:Key="ComboBoxItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="Black"/>
+        </Style>
     </Window.Resources>
     <Grid Margin="15">
         <Grid.RowDefinitions>
@@ -31,13 +36,16 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                     <Label Name="lblDate" Content="Day:" Width="90" Padding="0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-                    <ComboBox Name="cbDate" Width="100" IsEnabled="False" Background="{StaticResource BgInput}" Foreground="{StaticResource TextPrimary}"/>
+                    <!-- Changed Foreground to Black -->
+                    <ComboBox Name="cbDate" Width="100" IsEnabled="False" Background="{StaticResource BgInput}" Foreground="Black" ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                     <Label Content="Time:" Width="90" Padding="0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-                    <ComboBox Name="cbHour" Width="50" Background="{StaticResource BgInput}" Foreground="{StaticResource TextPrimary}"/>
+                    <!-- Changed Foreground to Black -->
+                    <ComboBox Name="cbHour" Width="50" Background="{StaticResource BgInput}" Foreground="Black" ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
                     <Label Content=":" VerticalAlignment="Center" Margin="2,0,2,0" Foreground="{StaticResource TextSecondary}"/>
-                    <ComboBox Name="cbMinute" Width="50" Background="{StaticResource BgInput}" Foreground="{StaticResource TextPrimary}"/>
+                    <!-- Changed Foreground to Black -->
+                    <ComboBox Name="cbMinute" Width="50" Background="{StaticResource BgInput}" Foreground="Black" ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
                     <TextBlock Text="(24h format)" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="{StaticResource TextMuted}"/>
                 </StackPanel>
                 <Border BorderBrush="{StaticResource BorderDefault}" BorderThickness="0,1,0,0" Padding="0,10,0,0">

@@ -20,6 +20,7 @@ public partial class ScheduleRebootWindow : Window
         for (int i = 0; i < 60; i++) cbMinute.Items.Add($"{i:D2}");
 
         chkEnableRestart.IsChecked = _state.ScheduleRebootEnabled;
+        
         switch (_state.ScheduleRebootFreq)
         {
             case "Daily": rbDaily.IsChecked = true; break;
@@ -29,8 +30,16 @@ public partial class ScheduleRebootWindow : Window
         }
 
         var timeParts = _state.ScheduleRebootTime.Split(':');
-        cbHour.SelectedItem = $"{int.Parse(timeParts[0]):D2}";
-        cbMinute.SelectedItem = $"{int.Parse(timeParts[1]):D2}";
+        if (timeParts.Length == 2 && int.TryParse(timeParts[0], out int h) && int.TryParse(timeParts[1], out int m))
+        {
+            cbHour.SelectedItem = $"{h:D2}";
+            cbMinute.SelectedItem = $"{m:D2}";
+        }
+        else
+        {
+            cbHour.SelectedIndex = 0;
+            cbMinute.SelectedIndex = 0;
+        }
 
         UpdateSchedDateUI();
         rbDaily.Checked += (_, _) => UpdateSchedDateUI();
@@ -68,19 +77,33 @@ public partial class ScheduleRebootWindow : Window
 
     private void BtnSave_Click(object sender, RoutedEventArgs e)
     {
-        if (_schedSaved) { Close(); return; }
+        // On the second click, close the dialog and return true
+        if (_schedSaved) 
+        { 
+            DialogResult = true; 
+            return; 
+        }
+
+        // First click: Calculate the date and update the UI
         _state.ScheduleRebootEnabled = chkEnableRestart.IsChecked ?? false;
         _state.ScheduleRebootFreq = rbDaily.IsChecked == true ? "Daily" :
                                     rbWeekly.IsChecked == true ? "Weekly" :
                                     rbBiweekly.IsChecked == true ? "Biweekly" : "Monthly";
-        _state.ScheduleRebootDate = cbDate.IsEnabled ? cbDate.Text : "N/A";
+        
+        _state.ScheduleRebootDate = cbDate.IsEnabled ? cbDate.SelectedItem.ToString() : "N/A";
         _state.ScheduleRebootTime = $"{cbHour.Text}:{cbMinute.Text}";
         
         var nextDate = ScheduledRebootService.GetNextRebootDate(_state.ScheduleRebootFreq, _state.ScheduleRebootDate, _state.ScheduleRebootTime);
-        if (nextDate.HasValue) txtNextReboot.Text = " " + nextDate.Value.ToString("dddd, MMMM dd, yyyy 'at' hh:mm tt");
+        if (nextDate.HasValue) 
+        {
+            txtNextReboot.Text = " " + nextDate.Value.ToString("dddd, MMMM dd, yyyy 'at' hh:mm tt");
+        }
+        else 
+        {
+            txtNextReboot.Text = " Invalid settings";
+        }
         
         _schedSaved = true;
         btnSave.Content = "Apply & Close";
-        DialogResult = true;
     }
 }

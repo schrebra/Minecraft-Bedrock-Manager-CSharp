@@ -52,6 +52,9 @@ public partial class MainWindow : Window
 
         InitializeComponent();
         BuildBrushCaches();
+        
+        // FIX: Populate the UI with the loaded settings
+        InitializeUiState();
 
         _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
         _timer.Tick += Timer_Tick;
@@ -69,6 +72,21 @@ public partial class MainWindow : Window
         HookTitleBar();
         HookSettingsAutoSave();
         HookButtons();
+    }
+
+    // FIX: Method to load saved state into UI controls
+    private void InitializeUiState()
+    {
+        txtRootPath.Text = _state.RootPath;
+        chkAutoStart.IsChecked = _state.StartAfterUpdate;
+        chkAutoLaunch.IsChecked = _state.AutoLaunchOnStart;
+        chkCrashProtect.IsChecked = _state.CrashProtection;
+        chkAutoCheckUpdates.IsChecked = _state.AutoCheckUpdates;
+        chkAutoApplyUpdates.IsChecked = _state.AutoApplyUpdates;
+        txtInterval.Text = _state.UpdateCheckHours.ToString();
+        txtMaxBackups.Text = _state.MaxBackups.ToString();
+        chkScheduleReboot.IsChecked = _state.ScheduleRebootEnabled;
+        lblHostname.Text = NetworkHelper.GetHostName();
     }
 
     private void BuildBrushCaches()
@@ -211,10 +229,10 @@ public partial class MainWindow : Window
         }
 
         var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-        AppendLogLine($"{now} [SYSTEM ] ═══════════════════════════════════════════", "SYSTEM");
+        AppendLogLine($"{now} [SYSTEM ] -------------------------------------------", "SYSTEM");
         AppendLogLine($"{now} [SYSTEM ]   Minecraft Bedrock Server Manager v28.4", "SUCCESS");
         AppendLogLine($"{now} [SYSTEM ]   .NET {Environment.Version}", "SYSTEM");
-        AppendLogLine($"{now} [SYSTEM ] ═══════════════════════════════════════════", "SYSTEM");
+        AppendLogLine($"{now} [SYSTEM ] -------------------------------------------", "SYSTEM");
 
         if (!File.Exists(exe))
             AppendLogLine($"{now} [WARN   ] No installation detected — click 'Setup / Install' to begin.", "WARN");
@@ -466,13 +484,13 @@ public partial class MainWindow : Window
             }
             else
             {
-                lblNextCheck.Text = $"Next check: {(int)ts.TotalHours}h {ts.Minutes}m";
+                lblNextCheck.Text = $"Next Scheduled Update Check: {(int)ts.TotalHours}h {ts.Minutes}m";
                 dotPeriodic.Fill = ts.TotalHours < 1 ? _statusBrushCache["red"] : _statusBrushCache["green"];
             }
         }
         else
         {
-            lblNextCheck.Text = _state.AutoCheckUpdates ? "Checking…" : "Auto-check: off";
+            lblNextCheck.Text = _state.AutoCheckUpdates ? "Next Scheduled Update: Checking…" : "Next Scheduled Update: Off";
             dotPeriodic.Fill = _statusBrushCache["gray"];
         }
 
@@ -496,7 +514,7 @@ public partial class MainWindow : Window
 
     private async Task PeriodicStatusCheckAsync(CancellationToken ct)
     {
-        LogToManager("PERIODIC", "── Periodic status check ──");
+        LogToManager("PERIODIC", "-- Periodic status check --");
         if (InstallService.TestServerInstalled(_state))
         {
             _state.IsInstalled = true;
@@ -570,7 +588,7 @@ public partial class MainWindow : Window
             }
         }
         catch (Exception ex) { LogToManager("WARN", $"Periodic update check failed: {ex.Message}"); }
-        LogToManager("PERIODIC", "── Periodic check done ──");
+        LogToManager("PERIODIC", "-- Periodic check done --");
     }
 
     private void HookButtons()
@@ -586,9 +604,9 @@ public partial class MainWindow : Window
                     if (InstallService.TestServerInstalled(_state))
                     { LogToManager("WARN", "Server is already installed. Use 'Download and Update' instead."); SetProgress("reset"); return; }
 
-                    LogToManager("HEADER", "═══════════════════════════════════════════");
+                    LogToManager("HEADER", "-------------------------------------------");
                     LogToManager("HEADER", "  FIRST-TIME SETUP / FRESH INSTALL");
-                    LogToManager("HEADER", "═══════════════════════════════════════════");
+                    LogToManager("HEADER", "-------------------------------------------");
                     InstallService.InitializeDirectories(_state, LogToManager);
 
                     var latest = await UpdateService.FetchLatestVersionAsync(_state.ApiUrl, LogToManager, ct);
@@ -601,9 +619,9 @@ public partial class MainWindow : Window
                         LogToManager, SetProgress, SetStatusLabel, _ => RefreshInstalledLabel(), ct);
 
                     RefreshInstalledLabel();
-                    LogToManager("HEADER", "═══════════════════════════════════════════");
+                    LogToManager("HEADER", "-------------------------------------------");
                     LogToManager("SUCCESS", "  Setup completed successfully!");
-                    LogToManager("HEADER", "═══════════════════════════════════════════");
+                    LogToManager("HEADER", "-------------------------------------------");
                 }
                 catch (Exception ex)
                 {
@@ -655,14 +673,14 @@ public partial class MainWindow : Window
                 {
                     var url = _state.LatestUrl; var file = _state.LatestFilename;
                     if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(file)) { LogToManager("ERROR", "No update URL cached."); return; }
-                    LogToManager("HEADER", "═══════════════════════════════════════════");
+                    LogToManager("HEADER", "-------------------------------------------");
                     LogToManager("HEADER", "  STARTING UPDATE PROCESS");
-                    LogToManager("HEADER", "═══════════════════════════════════════════");
+                    LogToManager("HEADER", "-------------------------------------------");
                     await InstallService.DownloadAndInstallAsync(_state, url, file, false, LogToManager, SetProgress, SetStatusLabel, _ => RefreshInstalledLabel(), ct);
                     RefreshInstalledLabel();
-                    LogToManager("HEADER", "═══════════════════════════════════════════");
+                    LogToManager("HEADER", "-------------------------------------------");
                     LogToManager("SUCCESS", "  Update completed successfully!");
-                    LogToManager("HEADER", "═══════════════════════════════════════════");
+                    LogToManager("HEADER", "-------------------------------------------");
                     SetStatusLabel("lblUpdateStatus", "UP TO DATE", "green");
                     _state.UpdateAvailable = false;
                 }
@@ -820,9 +838,8 @@ public partial class MainWindow : Window
         };
         lblLogFile.MouseLeftButtonUp += (_, _) =>
         {
-            var p = Path.Combine(_state.LogsPath, $"BedrockServerManager_{DateTime.Now:yyyyMMdd}.log");
-            if (File.Exists(p)) Process.Start("notepad.exe", $"\"{p}\"");
-            else System.Windows.MessageBox.Show("Log file does not exist yet.", "Not Found", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (Directory.Exists(_state.LogsPath)) OpenInExplorer(_state.LogsPath);
+            else System.Windows.MessageBox.Show("Logs folder does not exist yet.", "Not Found", MessageBoxButton.OK, MessageBoxImage.Information);
         };
     }
 
@@ -935,19 +952,19 @@ public partial class MainWindow : Window
             _state.NextRebootDate = next;
             if (next.HasValue)
             {
-                lblNextReboot.Text = "Reboot: " + next.Value.ToString("MMM dd HH:mm");
+                lblNextReboot.Text = "Next Scheduled Server Reboot: " + next.Value.ToString("MMM dd HH:mm");
                 dotReboot.Fill = _statusBrushCache["green"];
             }
             else
             {
-                lblNextReboot.Text = "Reboot: Invalid";
+                lblNextReboot.Text = "Next Scheduled Server Reboot: Invalid";
                 dotReboot.Fill = _statusBrushCache["red"];
             }
         }
         else
         {
             _state.NextRebootDate = null;
-            lblNextReboot.Text = "Reboot: Off";
+            lblNextReboot.Text = "Next Scheduled Server Reboot: Off";
             dotReboot.Fill = _statusBrushCache["gray"];
         }
     }
@@ -1031,7 +1048,7 @@ public partial class MainWindow : Window
     {
         lblInstallDir.Text = _state.ServerPath;
         lblBackupDir.Text  = _state.BackupPath;
-        lblLogFile.Text    = Path.Combine(_state.LogsPath, $"BedrockServerManager_{DateTime.Now:yyyyMMdd}.log");
+        lblLogFile.Text    = _state.LogsPath;
     }
 
     private void RefreshInstalledLabel()

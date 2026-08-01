@@ -6,7 +6,8 @@
         MinWidth="1000" MinHeight="600"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized" WindowStyle="None"
-        Background="#24273A">
+        Background="#24273A"
+        Icon="pack://application:,,,/minecraft.ico">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="32" ResizeBorderThickness="6" CornerRadius="0" GlassFrameThickness="0" UseAeroCaptionButtons="False"/>
     </WindowChrome.WindowChrome>
@@ -329,13 +330,13 @@
                     <Border Background="{StaticResource BgCard}" BorderBrush="{StaticResource BorderDefault}" BorderThickness="1" CornerRadius="4" Padding="8,5" VerticalAlignment="Center" Margin="0,0,8,0">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse x:Name="dotReboot" Width="8" Height="8" Fill="{StaticResource AccentGray}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock x:Name="lblNextReboot" Text="Reboot: Off" Foreground="{StaticResource TextSecondary}" FontSize="10.5" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="lblNextReboot" Text="Next Scheduled Server Reboot: Off" Foreground="{StaticResource TextSecondary}" FontSize="10.5" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Border>
                     <Border Background="{StaticResource BgCard}" BorderBrush="{StaticResource BorderDefault}" BorderThickness="1" CornerRadius="4" Padding="8,5" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse x:Name="dotPeriodic" Width="8" Height="8" Fill="{StaticResource AccentGray}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock x:Name="lblNextCheck" Text="Auto-check: —" Foreground="{StaticResource TextSecondary}" FontSize="10.5" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="lblNextCheck" Text="Next Scheduled Update: —" Foreground="{StaticResource TextSecondary}" FontSize="10.5" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -406,80 +407,91 @@
                     </StackPanel>
                 </Border>
             </Grid>
-            <Border Grid.Row="3" Style="{StaticResource Card}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <Grid Grid.Row="0" Grid.Column="0" Margin="0,0,0,4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="100"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Server Dir:" Style="{StaticResource InfoKey}"/>
-                        <TextBlock Grid.Column="1" x:Name="lblInstallDir" Text="—" Style="{StaticResource InfoVal}" Foreground="{StaticResource AccentBlue}" TextDecorations="Underline" Cursor="Hand"/>
+            <Grid Grid.Row="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Panel 1: Directories -->
+                <Border Grid.Column="0" Style="{StaticResource Card}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0" Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Server Dir:" Style="{StaticResource InfoKey}"/>
+                            <TextBlock Grid.Column="1" x:Name="lblInstallDir" Text="—" Style="{StaticResource InfoVal}" Foreground="{StaticResource AccentBlue}" TextDecorations="Underline" Cursor="Hand"/>
+                        </Grid>
+                        <Grid Grid.Row="1" Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Backups Dir:" Style="{StaticResource InfoKey}"/>
+                            <TextBlock Grid.Column="1" x:Name="lblBackupDir" Text="—" Style="{StaticResource InfoVal}" Foreground="{StaticResource AccentBlue}" TextDecorations="Underline" Cursor="Hand"/>
+                        </Grid>
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Logs Dir:" Style="{StaticResource InfoKey}"/>
+                            <TextBlock Grid.Column="1" x:Name="lblLogFile" Text="—" Style="{StaticResource InfoVal}" Foreground="{StaticResource AccentBlue}" TextDecorations="Underline" Cursor="Hand"/>
+                        </Grid>
                     </Grid>
-                    <Rectangle Grid.Row="0" Grid.Column="1" Fill="{StaticResource BorderDefault}" Width="1" HorizontalAlignment="Center"/>
-                    <Grid Grid.Row="0" Grid.Column="2" Margin="0,0,0,4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="100"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="PC Uptime:" Style="{StaticResource InfoKey}"/>
-                        <TextBlock Grid.Column="1" x:Name="lblPcUptime" Text="—" Style="{StaticResource InfoVal}"/>
+                </Border>
+
+                <!-- Panel 2: Uptime & Backup -->
+                <Border Grid.Column="1" Style="{StaticResource Card}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0" Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="PC Uptime:" Style="{StaticResource InfoKey}"/>
+                            <TextBlock Grid.Column="1" x:Name="lblPcUptime" Text="—" Style="{StaticResource InfoVal}"/>
+                        </Grid>
+                        <Grid Grid.Row="1" Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Server Up:" Style="{StaticResource InfoKey}"/>
+                            <TextBlock Grid.Column="1" x:Name="lblServerUptime" Text="—" Style="{StaticResource InfoVal}"/>
+                        </Grid>
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Last Backup:" Style="{StaticResource InfoKey}"/>
+                            <TextBlock Grid.Column="1" x:Name="lblLastBackup" Text="—" Style="{StaticResource InfoVal}"/>
+                        </Grid>
                     </Grid>
-                    <Grid Grid.Row="1" Grid.Column="0" Margin="0,0,0,4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="100"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Backups Dir:" Style="{StaticResource InfoKey}"/>
-                        <TextBlock Grid.Column="1" x:Name="lblBackupDir" Text="—" Style="{StaticResource InfoVal}" Foreground="{StaticResource AccentBlue}" TextDecorations="Underline" Cursor="Hand"/>
-                    </Grid>
-                    <Rectangle Grid.Row="1" Grid.Column="1" Fill="{StaticResource BorderDefault}" Width="1" HorizontalAlignment="Center"/>
-                    <Grid Grid.Row="1" Grid.Column="2" Margin="0,0,0,4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="100"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Server Up:" Style="{StaticResource InfoKey}"/>
-                        <TextBlock Grid.Column="1" x:Name="lblServerUptime" Text="—" Style="{StaticResource InfoVal}"/>
-                    </Grid>
-                    <Grid Grid.Row="2" Grid.Column="0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="100"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Logs Dir:" Style="{StaticResource InfoKey}"/>
-                        <TextBlock Grid.Column="1" x:Name="lblLogFile" Text="—" Style="{StaticResource InfoVal}" Foreground="{StaticResource AccentBlue}" TextDecorations="Underline" Cursor="Hand"/>
-                    </Grid>
-                    <Rectangle Grid.Row="2" Grid.Column="1" Fill="{StaticResource BorderDefault}" Width="1" HorizontalAlignment="Center"/>
-                    <Grid Grid.Row="2" Grid.Column="2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="100"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Last Backup:" Style="{StaticResource InfoKey}"/>
-                        <TextBlock Grid.Column="1" x:Name="lblLastBackup" Text="—" Style="{StaticResource InfoVal}"/>
-                    </Grid>
-                </Grid>
-            </Border>
+                </Border>
+            </Grid>
             <Border Grid.Row="4" Style="{StaticResource Card}">
                 <WrapPanel VerticalAlignment="Center">
                     <CheckBox x:Name="chkAutoStart" Content="Auto-start after update" Style="{StaticResource SettingsCheckBox}" IsChecked="True"/>
                     <CheckBox x:Name="chkAutoLaunch" Content="Auto-launch on GUI start" Style="{StaticResource SettingsCheckBox}" IsChecked="False"/>
                     <CheckBox x:Name="chkCrashProtect" Content="Crash Protection" Style="{StaticResource SettingsCheckBox}" IsChecked="True"/>
-                    <CheckBox x:Name="chkAutoCheckUpdates" Content="Check every:" Style="{StaticResource SettingsCheckBox}" IsChecked="True"/>
+                    <CheckBox x:Name="chkAutoCheckUpdates" Content="Update Check every:" Style="{StaticResource SettingsCheckBox}" IsChecked="True"/>
                     <TextBox x:Name="txtInterval" Width="35" Text="24" VerticalAlignment="Center" Style="{StaticResource LightTextBox}" Padding="3,4"/>
                     <TextBlock Text="hrs" VerticalAlignment="Center" Margin="4,0,15,0" Foreground="{StaticResource TextSecondary}" FontSize="11"/>
-                    <CheckBox x:Name="chkAutoApplyUpdates" Content="Auto-apply" Style="{StaticResource SettingsCheckBox}" IsChecked="False"/>
+                    <CheckBox x:Name="chkAutoApplyUpdates" Content="Apply update after download" Style="{StaticResource SettingsCheckBox}" IsChecked="False"/>
                     <TextBlock Text="Keep Backups:" VerticalAlignment="Center" Margin="15,0,4,0" Foreground="{StaticResource TextSecondary}" FontSize="11"/>
                     <TextBox x:Name="txtMaxBackups" Width="35" Text="3" VerticalAlignment="Center" Style="{StaticResource LightTextBox}" Padding="3,4" Margin="0,0,15,0"/>
                     <CheckBox x:Name="chkScheduleReboot" Content="Scheduled Reboot" Style="{StaticResource SettingsCheckBox}" IsChecked="False" Margin="0,0,0,0"/>
