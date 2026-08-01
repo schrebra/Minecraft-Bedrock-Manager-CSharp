@@ -4,6 +4,14 @@
 A modern, feature-rich desktop application built with .NET 8 and WPF designed to automate the management of the Minecraft Bedrock Dedicated Server on Windows. It wraps the server process, providing a beautiful graphical interface, dual console layout, automated updates, backups, and crash recovery—optimized for long-term stability (weeks or months of uptime).
 
 
+<a href="Screenshots/2026-08-01_113150.png">
+  <img src="Screenshots/2026-08-01_113150.png" alt="Minecraft Bedrock Manager Screenshot 1" width="60%" />
+</a>
+
+<a href="Screenshots/2026-08-01_154250.png">
+  <img src="Screenshots/2026-08-01_154250.png" alt="Minecraft Bedrock Manager Screenshot 2" width="60%" />
+</a>
+
 
 ## 🌟 Features
 
