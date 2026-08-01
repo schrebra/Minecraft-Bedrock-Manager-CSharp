@@ -3,6 +3,9 @@
 
 A modern, feature-rich desktop application built with .NET 8 and WPF designed to automate the management of the Minecraft Bedrock Dedicated Server on Windows. It wraps the server process, providing a beautiful graphical interface, dual console layout, automated updates, backups, and crash recovery—optimized for long-term stability (weeks or months of uptime).
 
+<img width="60%" alt="image" src="https://github.com/user-attachments/assets/cbe39987-c511-4d80-a266-0bccdd2819f4" />
+
+
 ## 🌟 Features
 
 ### Dual Console Layout
@@ -53,6 +56,16 @@ A modern, feature-rich desktop application built with .NET 8 and WPF designed to
 3. Set your Root Directory (e.g., `C:\Bedrock`).
 4. Click **Setup / Install** to download the latest server files.
 5. Use the dashboard to start, stop, backup, and configure your server.
+
+If you want your friends to be able to quickly be able to connect, run this command in the bottom right.
+
+`allowlist off`
+
+That means anyone can join. It's convienent, but insecure. 
+
+If the server is public-facing, you should disable this setting for security reasons.
+
+Instead of running that `allowlist off` command, manually manage the allowlist using allowlist.json.
 
 
 
