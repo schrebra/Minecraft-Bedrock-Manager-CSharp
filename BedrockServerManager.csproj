@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
@@ -7,16 +7,27 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    
-    <!-- Embeds the icon into the compiled EXE file for Windows Explorer -->
     <ApplicationIcon>minecraft.ico</ApplicationIcon>
   </PropertyGroup>
+  
+  <!-- This ItemGroup ensures minecraft.ico and app.manifest don't get copied as loose files -->
+  <ItemGroup>
+    <None Update="minecraft.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
-  
-  <!-- Explicitly embeds the icon as a WPF resource so the Window can load it -->
-  <ItemGroup>
-    <Resource Include="minecraft.ico" />
-  </ItemGroup>
+
+  <!-- PUBLISH SETTINGS -->
+  <PropertyGroup>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
 </Project>
