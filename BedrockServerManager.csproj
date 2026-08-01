@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
@@ -10,24 +10,13 @@
     <ApplicationIcon>minecraft.ico</ApplicationIcon>
   </PropertyGroup>
   
-  <!-- This ItemGroup ensures minecraft.ico and app.manifest don't get copied as loose files -->
-  <ItemGroup>
-    <None Update="minecraft.ico">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
 
-  <!-- PUBLISH SETTINGS -->
-  <PropertyGroup>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <SelfContained>true</SelfContained>
-    <PublishSingleFile>true</PublishSingleFile>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
-    <DebugType>none</DebugType>
-  </PropertyGroup>
+  <!-- Explicitly embeds the icon and HTML files as WPF resources -->
+  <ItemGroup>
+    <Resource Include="minecraft.ico" />
+    <Resource Include="ConfigEditor.html" />
+  </ItemGroup>
 </Project>

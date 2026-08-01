@@ -512,6 +512,7 @@
                         <Button x:Name="btnRefresh" Content="↻ Refresh Status" Background="{StaticResource AccentOrange}" Style="{StaticResource ActionButton}"/>
                         <Button x:Name="btnBackupNow" Content="💾 Backup Now" Background="{StaticResource AccentGray}" Foreground="#CAD3F5" Style="{StaticResource ActionButton}" IsEnabled="False"/>
                         <Button x:Name="btnRestoreBackup" Content="⏪ Restore Backup" Background="{StaticResource AccentGray}" Foreground="#CAD3F5" Style="{StaticResource ActionButton}" IsEnabled="False"/>
+                        <Button x:Name="btnEditConfig" Content="⚙️ Server Properties Editor" Background="{StaticResource AccentMauve}" Foreground="#24273A" Style="{StaticResource ActionButton}"/>
                     </WrapPanel>
                     <TextBlock Grid.Column="1" x:Name="lblFooter" Text="v28.4" Foreground="{StaticResource TextMuted}" FontSize="10" VerticalAlignment="Center" Margin="10,0,0,0"/>
                 </Grid>

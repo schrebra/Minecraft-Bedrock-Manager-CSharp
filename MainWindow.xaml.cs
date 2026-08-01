@@ -484,7 +484,7 @@ public partial class MainWindow : Window
             }
             else
             {
-                lblNextCheck.Text = $"Next Scheduled Update Check: {(int)ts.TotalHours}h {ts.Minutes}m";
+                lblNextCheck.Text = $"Next Scheduled Update: {(int)ts.TotalHours}h {ts.Minutes}m";
                 dotPeriodic.Fill = ts.TotalHours < 1 ? _statusBrushCache["red"] : _statusBrushCache["green"];
             }
         }
@@ -841,6 +841,102 @@ public partial class MainWindow : Window
             if (Directory.Exists(_state.LogsPath)) OpenInExplorer(_state.LogsPath);
             else System.Windows.MessageBox.Show("Logs folder does not exist yet.", "Not Found", MessageBoxButton.OK, MessageBoxImage.Information);
         };
+
+        btnEditConfig.Click += (_, _) =>
+        {
+            if (_state.IsBusy) return;
+            
+            // Check if the directory exists rather than the IsInstalled flag
+            if (!Directory.Exists(_state.ServerPath))
+            {
+                System.Windows.MessageBox.Show("Please install the server first (Server directory not found).", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                // 1. Define where to save the HTML file (directly in the Server folder)
+                string htmlFilePath = Path.Combine(_state.ServerPath, "bedrock_config_editor.html");
+                
+                // 2. Read the embedded HTML resource using WPF's Resource System
+                var resourceInfo = System.Windows.Application.GetResourceStream(new Uri("pack://application:,,,/ConfigEditor.html", UriKind.Absolute));
+                
+                if (resourceInfo != null)
+                {
+                    // FIX: Copy raw bytes directly to disk to preserve HTML encoding
+                    using (var fileStream = new FileStream(htmlFilePath, FileMode.Create, FileAccess.Write))
+                    {
+                        resourceInfo.Stream.CopyTo(fileStream);
+                    }
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show("Config editor resource not found.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // 3. Open the HTML file using the user's default web browser
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = htmlFilePath,
+                    UseShellExecute = true // This tells Windows to open it with the default browser
+                });
+                
+                LogToManager("SYSTEM", "Opened server.properties web editor in default browser.");
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Failed to open config editor: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        };
+
+        {
+            if (_state.IsBusy) return;
+            
+            // FIX: Check if the directory exists rather than the IsInstalled flag
+            if (!Directory.Exists(_state.ServerPath))
+            {
+                System.Windows.MessageBox.Show("Please install the server first (Server directory not found).", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                // 1. Define where to save the HTML file (directly in the Server folder)
+                string htmlFilePath = Path.Combine(_state.ServerPath, "bedrock_config_editor.html");
+                
+                // 2. Read the embedded HTML resource using WPF's Resource System
+                var resourceInfo = System.Windows.Application.GetResourceStream(new Uri("ConfigEditor.html", UriKind.Relative));
+                
+                if (resourceInfo != null)
+                {
+                    using (var reader = new StreamReader(resourceInfo.Stream))
+                    {
+                        string htmlContent = reader.ReadToEnd();
+                        // 3. Write the HTML file to disk
+                        File.WriteAllText(htmlFilePath, htmlContent);
+                    }
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show("Config editor resource not found.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // 4. Open the HTML file using the user's default web browser
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = htmlFilePath,
+                    UseShellExecute = true // This tells Windows to open it with the default browser
+                });
+                
+                LogToManager("SYSTEM", "Opened server.properties web editor in default browser.");
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Failed to open config editor: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        };
     }
 
     private void TxtServerCommand_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -1064,7 +1160,7 @@ public partial class MainWindow : Window
             btnFirstSetup.IsEnabled = btnCheckUpdate.IsEnabled = btnUpdate.IsEnabled =
             btnStartServer.IsEnabled = btnStopServer.IsEnabled = btnRefresh.IsEnabled =
             btnBrowse.IsEnabled = btnOpenFolder.IsEnabled = txtRootPath.IsEnabled =
-            btnBackupNow.IsEnabled = btnRestoreBackup.IsEnabled = false;
+            btnBackupNow.IsEnabled = btnRestoreBackup.IsEnabled = btnEditConfig.IsEnabled = false;
         }
         else
         {
@@ -1080,6 +1176,7 @@ public partial class MainWindow : Window
             bool cb = _state.IsInstalled && !_state.IsRunning;
             btnBackupNow.IsEnabled     = cb;
             btnRestoreBackup.IsEnabled = cb;
+            btnEditConfig.IsEnabled    = _state.IsInstalled;
         }
         bool canSend = _state.IsRunning && _state.ServerProcess != null && !_state.ServerProcess.HasExited;
         txtServerCommand.IsEnabled = canSend;
