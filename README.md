@@ -1,7 +1,6 @@
-
 # Minecraft Bedrock Server Manager (C# / WPF Edition)
 
-A modern, feature-rich desktop application built with .NET 8 and WPF designed to automate the management of the Minecraft Bedrock Dedicated Server on Windows. It wraps the server process, providing a beautiful graphical interface, dual console layout, automated updates, backups, and crash recovery—optimized for long-term stability (weeks or months of uptime).
+A modern, feature-rich desktop application built with .NET 8 and WPF designed to automate the management of the Minecraft Bedrock Dedicated Server on Windows. It wraps the server process, providing a beautiful graphical interface, dual console layout, automated updates, backups, crash recovery, and an integrated web-based configuration editor—optimized for long-term stability (weeks or months of uptime).
 
 <table>
   <tr>
@@ -22,7 +21,12 @@ A modern, feature-rich desktop application built with .NET 8 and WPF designed to
 
 ### Dual Console Layout
 - **Manager Console (Left):** Displays manager-side logs, update statuses, and system events.
-- **Server Console (Right):** Live capture of `bedrock_server.exe` stdin/stdout. You can type commands directly into the GUI to send them to the server (e.g., `say hello`, `list`, `stop`).
+- **Server Console (Right):** Live capture of bedrock_server.exe stdin/stdout. You can type commands directly into the GUI to send them to the server (e.g., say hello, list, stop).
+
+### Server.properties Web Editor
+- **Integrated HTML UI:** Clicking "Server.properties Editor" extracts a beautifully designed, embedded HTML configuration tool directly into your Server folder and opens it in your default web browser.
+- **Visual Settings:** Adjust server properties (gameplay, network, world, anti-cheat, etc.) using interactive toggles, steppers, and dropdowns, rather than editing raw text.
+- **Seamless Save:** The web tool generates and downloads the server.properties file, prompting you to easily copy it into your server directory.
 
 ### Automated Server Management
 - **First-Time Setup:** Automatically downloads the latest Bedrock Server zip from the official Minecraft API, extracts it, and configures the directories.
@@ -30,7 +34,7 @@ A modern, feature-rich desktop application built with .NET 8 and WPF designed to
 - **Crash Protection:** Monitors the server process. If the server crashes unexpectedly, the manager waits 10 seconds (to prevent file locks) and automatically restarts it.
 
 ### Backup & Restore
-- **Full Backups:** Compresses server configurations (`server.properties`, `allowlist.json`, `permissions.json`) and world files into a single `.zip` archive.
+- **Full Backups:** Compresses server configurations (server.properties, allowlist.json, permissions.json) and world files into a single .zip archive.
 - **SHA256 Verification:** Generates a manifest of file hashes during backup. Upon restoration, it verifies every file's checksum to ensure zero corruption before applying the files.
 - **Retention Policy:** Automatically purges old backups to retain only a specified number of recent archives.
 
@@ -39,7 +43,7 @@ A modern, feature-rich desktop application built with .NET 8 and WPF designed to
 - **Uptime Tracking:** Monitors and displays both PC uptime and Server uptime directly on the dashboard.
 
 ### Network & System Configuration
-- **Firewall Automation:** Automatically creates and manages Windows Firewall rules for the server executable using `netsh`.
+- **Firewall Automation:** Automatically creates and manages Windows Firewall rules for the server executable using netsh.
 - **Dependency Checks:** Checks for Administrator privileges and prompts the user to install the Visual C++ Redistributable if it's missing.
 
 ### User Experience
@@ -58,17 +62,18 @@ A modern, feature-rich desktop application built with .NET 8 and WPF designed to
 1. **Zero Downtime Worry:** The built-in crash detection and scheduled reboot system ensure your server stays healthy over long periods.
 2. **Safe Updates:** Updating a live server is risky. This manager safely stops the server, performs a verified backup, extracts the new files, and restarts automatically.
 3. **No Command Line Required:** The dual-console layout gives you the power of the raw server console right inside a modern Windows GUI.
-4. **Portable & Clean:** It compiles down to a single `.exe` file. It doesn't clutter your system with installers or require external runtimes.
+4. **Portable & Clean:** It compiles down to a single .exe file. It doesn't clutter your system with installers or require external runtimes.
 5. **Resource Efficient:** Built natively with C# and WPF, it runs smoothly in the background without consuming excessive CPU or RAM.
 
 ## 📦 Installation & Usage
 
-1. Download the latest `BedrockServerManager.exe` from the Releases page.
-2. Right-click the executable and select **Run as Administrator** (recommended for firewall and network configuration).
-3. Set your Root Directory (e.g., `C:\Bedrock`).
-4. Click **Setup / Install** to download the latest server files.
-5. Use the dashboard to start, stop, backup, and configure your server.
+1. Download the latest BedrockServerManager.exe from the Releases page.
+2. Right-click the executable and select Run as Administrator (recommended for firewall and network configuration).
+3. Set your Root Directory (e.g., C:\Bedrock).
+4. Click Setup / Install to download the latest server files.
+5. Use the dashboard to start, stop, backup, and configure your server. Click "Server.properties Editor" to visually edit your config!
 
+# Friends Quick Connect
 If you want your friends to be able to quickly be able to connect, run this command in the bottom right.
 
 `allowlist off`
