@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bedrock Server Config</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+        :root{--rosewater:#f4dbd6;--flamingo:#f0c6c6;--pink:#f5bde6;--mauve:#c6a0f6;--red:#ed8796;--maroon:#ee99a0;--peach:#f5a97f;--yellow:#eed49f;--green:#a6da95;--teal:#8bd5ca;--sky:#91d7e3;--sapphire:#7dc4e4;--blue:#8aadf4;--lavender:#b7bdf8;--text:#cad3f5;--subtext1:#b8c0e0;--subtext0:#a5adcb;--overlay2:#939ab7;--overlay1:#8087a2;--overlay0:#6e738d;--surface2:#5b6078;--surface1:#494d64;--surface0:#363a4f;--base:#24273a;--mantle:#1e2030;--crust:#181926}
+        *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+        body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--base);color:var(--text);min-height:100vh;overflow-x:hidden}
+        ::selection{background:var(--mauve);color:var(--crust)}
+        input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+        input[type=number]{-moz-appearance:textfield}
+        .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+
+        .sidebar{background:var(--mantle);border-right:1px solid var(--surface0);position:fixed;top:0;left:0;width:260px;height:100vh;display:flex;flex-direction:column;z-index:200;transition:transform .35s cubic-bezier(.4,0,.2,1)}
+        .sidebar-brand{padding:28px 24px 20px;border-bottom:1px solid var(--surface0)}
+        .sidebar-brand h1{font-size:15px;font-weight:700;color:var(--mauve);display:flex;align-items:center;gap:10px}
+        .brand-icon{width:36px;height:36px;background:var(--crust);border:2px solid var(--surface1);border-radius:11px;display:grid;place-items:center;font-size:18px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3);position:relative;overflow:hidden}
+        .brand-icon::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(198,160,246,.15),transparent 60%);border-radius:9px}
+        .sidebar-brand p{font-size:11px;color:var(--overlay1);margin-top:4px;margin-left:46px}
+        .sidebar-nav{flex:1;overflow-y:auto;padding:12px 10px}
+        .nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;cursor:pointer;transition:all .2s;margin-bottom:2px;font-size:13px;font-weight:500;color:var(--subtext0);position:relative}
+        .nav-item:hover{background:var(--surface0);color:var(--text)}
+        .nav-item.active{background:var(--surface0);color:var(--mauve)}
+        .nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--mauve);border-radius:0 3px 3px 0}
+        .nav-item .nav-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0;transition:transform .2s}
+        .nav-item:hover .nav-icon{transform:scale(1.2)}
+        .nav-badge{margin-left:auto;background:var(--surface1);color:var(--overlay1);font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px}
+
+        .nav-progress{margin:0 14px 6px;padding:14px 0;border-top:1px solid var(--surface0)}
+        .nav-progress-label{font-size:10px;color:var(--overlay0);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+        .nav-progress-pct{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;background:linear-gradient(90deg,var(--mauve),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .nav-progress-bar{height:6px;background:var(--surface0);border-radius:6px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.2)}
+        .nav-progress-fill{height:100%;background:linear-gradient(90deg,var(--mauve),var(--pink),var(--peach));background-size:200% 100%;border-radius:6px;transition:width .3s ease;width:0%;animation:progressShimmer 3s ease infinite;box-shadow:0 0 10px rgba(198,160,246,.3)}
+        @keyframes progressShimmer{0%{background-position:100% 50%}100%{background-position:0% 50%}}
+        .nav-progress-hint{font-size:9px;color:var(--overlay0);margin-top:6px;text-align:center;opacity:0;transition:opacity .3s}
+        .nav-progress-hint.show{opacity:1}
+
+        .sidebar-footer{padding:16px;border-top:1px solid var(--surface0)}
+        .btn-save-sidebar{width:100%;padding:11px;background:linear-gradient(135deg,var(--mauve),var(--blue));color:var(--crust);border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;position:relative;overflow:hidden}
+        .btn-save-sidebar::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(45deg,transparent,rgba(255,255,255,.1),transparent);transform:rotate(45deg) translateX(-100%);transition:transform .6s}
+        .btn-save-sidebar:hover::before{transform:rotate(45deg) translateX(100%)}
+        .btn-save-sidebar:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(198,160,246,.3)}
+
+        .main{grid-column:2;display:flex;flex-direction:column}
+
+        .topbar{position:sticky;top:0;z-index:100;background:rgba(36,39,58,.85);backdrop-filter:blur(20px) saturate(1.5);border-bottom:1px solid var(--surface0);padding:14px 32px}
+        .topbar-inner{display:flex;align-items:center;gap:10px;max-width:796px;width:100%}
+        .hamburger{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:4px;flex-shrink:0}
+        .search-wrap{flex:1;min-width:0;position:relative}
+        .search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--overlay0);pointer-events:none;transition:color .2s}
+        .search-wrap:focus-within svg{color:var(--mauve)}
+        .search-wrap input{width:100%;background:var(--surface0);border:1px solid transparent;color:var(--text);padding:10px 16px 10px 40px;border-radius:12px;font-size:13px;font-family:inherit;outline:none;transition:all .25s}
+        .search-wrap input::placeholder{color:var(--overlay0)}
+        .search-wrap input:focus{border-color:var(--mauve);background:var(--mantle);box-shadow:0 0 0 3px rgba(198,160,246,.1)}
+        .topbar-actions{display:flex;gap:6px;flex-shrink:0}
+
+        .btn{padding:9px 14px;border:none;border-radius:10px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .25s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;position:relative;overflow:hidden}
+        .btn::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(45deg,transparent,rgba(255,255,255,.08),transparent);transform:rotate(45deg) translateX(-100%);transition:transform .5s}
+        .btn:hover::before{transform:rotate(45deg) translateX(100%)}
+        .btn-ghost{background:var(--surface0);color:var(--subtext0)}
+        .btn-ghost:hover{background:var(--surface1);color:var(--text);transform:translateY(-1px)}
+        .btn-accent{background:var(--mauve);color:var(--crust)}
+        .btn-accent:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 4px 16px rgba(198,160,246,.3)}
+        .btn-green{background:var(--green);color:var(--crust)}
+        .btn-green:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 4px 16px rgba(166,218,149,.3)}
+
+        .content{padding:28px 32px 80px;max-width:860px;width:100%}
+
+        .welcome{background:linear-gradient(135deg,rgba(198,160,246,.08),rgba(138,173,244,.06));border:1px solid var(--surface0);border-radius:16px;padding:24px 28px;margin-bottom:32px;position:relative;overflow:hidden}
+        .welcome::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(198,160,246,.12),transparent 70%);border-radius:50%}
+        .welcome h2{font-size:20px;font-weight:700;margin-bottom:6px;color:var(--text)}
+        .welcome h2 .wave{display:inline-block;animation:wave 2s ease-in-out infinite;transform-origin:70% 70%}
+        @keyframes wave{0%,100%{transform:rotate(0)}20%{transform:rotate(14deg)}40%{transform:rotate(-8deg)}60%{transform:rotate(14deg)}80%{transform:rotate(-4deg)}}
+        .welcome p{font-size:13px;color:var(--subtext0);line-height:1.6}
+        .welcome .tip{display:inline-flex;align-items:center;gap:6px;background:var(--surface0);padding:6px 12px;border-radius:8px;font-size:11px;color:var(--overlay1);margin-top:12px}
+        .welcome .tip kbd{background:var(--surface1);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text)}
+
+        .section{margin-bottom:40px}
+        .section-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+        .section-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex-shrink:0;transition:transform .3s}
+        .section:hover .section-icon{transform:scale(1.1) rotate(-3deg)}
+        .section-meta h2{font-size:17px;font-weight:700;letter-spacing:-.3px}
+        .section-meta span{font-size:12px;color:var(--overlay1)}
+
+        .card{background:var(--mantle);border:1px solid var(--surface0);border-radius:14px;padding:18px 20px;margin-bottom:10px;transition:all .3s cubic-bezier(.4,0,.2,1);animation:cardIn .4s ease backwards}
+        .card:hover{border-color:var(--surface1);box-shadow:0 2px 20px rgba(0,0,0,.15);transform:translateY(-1px)}
+        .card.disabled{opacity:.45;border-style:dashed}
+        .card.disabled:hover{opacity:.6;transform:none}
+        .card-opt{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+        .card-opt input[type=checkbox]{appearance:none;-webkit-appearance:none;width:16px;height:16px;border:2px solid var(--overlay0);border-radius:4px;cursor:pointer;position:relative;transition:all .2s;flex-shrink:0}
+        .card-opt input[type=checkbox]:checked{background:var(--mauve);border-color:var(--mauve)}
+        .card-opt input[type=checkbox]:checked::after{content:'✓';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;color:var(--crust);font-weight:700}
+        .card-opt label{font-size:11px;color:var(--yellow);cursor:pointer;font-weight:500}
+        .card-body{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+        .card-info{flex:1;min-width:0}
+        .card-key{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--mauve);margin-bottom:5px;display:inline-block;transition:color .2s}
+        .card:hover .card-key{color:var(--pink)}
+        .card-desc{font-size:12.5px;color:var(--subtext0);line-height:1.6}
+        .card-allowed{font-size:11px;color:var(--overlay0);margin-top:6px;font-style:italic}
+        .card-ctrl{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+        .card-default{font-size:10px;color:var(--overlay0);font-family:'JetBrains Mono',monospace}
+
+        .switch-row{display:flex;align-items:center;gap:10px}
+        .switch-label{font-size:12px;font-weight:600;color:var(--overlay1);min-width:26px;text-align:right;transition:color .2s}
+        .switch-label.on{color:var(--green)}
+        .switch{position:relative;width:44px;height:24px;cursor:pointer}
+        .switch input{opacity:0;width:0;height:0}
+        .switch-track{position:absolute;inset:0;background:var(--surface1);border-radius:24px;transition:background .3s}
+        .switch-track::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:var(--overlay1);border-radius:50%;transition:all .3s cubic-bezier(.4,0,.2,1)}
+        .switch input:checked+.switch-track{background:var(--green)}
+        .switch input:checked+.switch-track::before{transform:translateX(20px);background:var(--crust)}
+
+        .stepper{display:flex;align-items:center;background:var(--surface0);border:1px solid var(--surface1);border-radius:10px;overflow:hidden;transition:all .2s}
+        .stepper:focus-within{border-color:var(--mauve);box-shadow:0 0 0 3px rgba(198,160,246,.12)}
+        .stepper input{background:transparent;border:none;color:var(--text);padding:8px 4px;text-align:center;width:80px;font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;font-weight:600}
+        .stepper-btn{background:none;border:none;color:var(--overlay1);width:34px;height:36px;cursor:pointer;display:grid;place-items:center;transition:all .15s;user-select:none;font-size:14px}
+        .stepper-btn:hover{background:var(--surface1);color:var(--text)}
+        .stepper-btn:active{background:var(--surface2);transform:scale(.95)}
+
+        .input{background:var(--surface0);border:1px solid var(--surface1);color:var(--text);padding:9px 14px;border-radius:10px;font-size:13px;font-family:inherit;outline:none;transition:all .2s;min-width:180px}
+        .input:focus{border-color:var(--mauve);box-shadow:0 0 0 3px rgba(198,160,246,.12)}
+        .input::placeholder{color:var(--overlay0)}
+
+        .sel{background:var(--surface0);border:1px solid var(--surface1);color:var(--text);padding:9px 14px;border-radius:10px;font-size:13px;font-family:inherit;outline:none;transition:all .2s;min-width:180px;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23939ab7' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+        .sel:focus{border-color:var(--mauve);box-shadow:0 0 0 3px rgba(198,160,246,.12)}
+        .sel option{background:var(--surface0);color:var(--text)}
+
+        .range-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+        .range-wrap input[type=range]{width:180px;height:6px;-webkit-appearance:none;appearance:none;background:var(--surface1);border-radius:6px;outline:none}
+        .range-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--mauve);border-radius:50%;cursor:pointer;box-shadow:0 2px 8px rgba(198,160,246,.3);transition:transform .15s}
+        .range-wrap input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+        .range-wrap input[type=range]::-moz-range-thumb{width:18px;height:18px;background:var(--mauve);border-radius:50%;cursor:pointer;border:none}
+        .range-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--mauve);background:var(--surface0);padding:2px 10px;border-radius:6px}
+
+        .seed-picker{margin-top:14px}
+        .seed-picker-label{font-size:11px;font-weight:600;color:var(--overlay1);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+        .seed-grid{display:flex;flex-direction:column;gap:6px}
+        .seed-card{display:flex;align-items:center;gap:12px;background:var(--surface0);border:1px solid var(--surface1);border-radius:10px;padding:10px 14px;cursor:pointer;transition:all .25s cubic-bezier(.4,0,.2,1)}
+        .seed-card:hover{border-color:var(--mauve);background:rgba(198,160,246,.06);transform:translateX(4px)}
+        .seed-card.active{border-color:var(--green);background:rgba(166,218,149,.06);transform:translateX(4px)}
+        .seed-card.active .seed-val{color:var(--green)}
+        .seed-emoji{font-size:22px;flex-shrink:0;width:30px;text-align:center;transition:transform .2s}
+        .seed-card:hover .seed-emoji{transform:scale(1.2)}
+        .seed-info{flex:1;min-width:0}
+        .seed-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px}
+        .seed-desc{font-size:11px;color:var(--overlay1);line-height:1.4}
+        .seed-val{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--overlay0);background:var(--mantle);padding:4px 8px;border-radius:6px;flex-shrink:0;transition:color .2s}
+
+        .done-badge{display:none;text-align:center;padding:32px 20px;animation:badgeIn .5s ease}
+        .done-badge.show{display:block}
+        @keyframes badgeIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+        .done-badge .checkmark{font-size:48px;margin-bottom:12px;display:block;animation:checkPop .5s ease .2s both}
+        @keyframes checkPop{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(0)}}
+        .done-badge p{font-size:14px;color:var(--subtext0);margin-bottom:4px}
+        .done-badge .done-title{font-size:18px;font-weight:700;color:var(--green);margin-bottom:4px}
+
+        .overlay{display:none;position:fixed;inset:0;background:rgba(24,25,38,.75);backdrop-filter:blur(8px);z-index:500;justify-content:center;align-items:center;padding:20px}
+        .overlay.open{display:flex}
+        .modal{background:var(--mantle);border:1px solid var(--surface0);border-radius:20px;padding:28px;max-width:720px;width:100%;max-height:85vh;display:flex;flex-direction:column;animation:modalIn .3s cubic-bezier(.4,0,.2,1)}
+        @keyframes modalIn{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+        .modal h2{font-size:18px;font-weight:700;margin-bottom:16px;color:var(--text);display:flex;align-items:center;gap:10px}
+        .modal pre{flex:1;overflow:auto;background:var(--crust);border:1px solid var(--surface0);border-radius:12px;padding:18px;font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.7;color:var(--subtext0);white-space:pre-wrap;word-break:break-all}
+        .modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+        .modal textarea{flex:1;background:var(--crust);border:1px solid var(--surface0);border-radius:12px;padding:16px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);resize:vertical;outline:none;min-height:200px;transition:border-color .2s}
+        .modal textarea:focus{border-color:var(--mauve)}
+        .modal textarea::placeholder{color:var(--overlay0)}
+        .modal .file-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+        .modal .file-row input[type=file]{font-size:12px;color:var(--subtext0)}
+        .modal .file-row input[type=file]::file-selector-button{background:var(--surface0);border:1px solid var(--surface1);color:var(--text);padding:6px 14px;border-radius:8px;font-size:12px;font-family:inherit;cursor:pointer;margin-right:10px;transition:all .2s}
+        .modal .file-row input[type=file]::file-selector-button:hover{background:var(--surface1)}
+        .modal .import-hint{font-size:12px;color:var(--overlay1);margin-bottom:14px;line-height:1.5}
+
+        .toast{position:fixed;bottom:28px;right:28px;background:var(--green);color:var(--crust);padding:12px 22px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;transform:translateY(80px);opacity:0;transition:all .35s cubic-bezier(.4,0,.2,1);box-shadow:0 4px 24px rgba(166,218,149,.25);display:flex;align-items:center;gap:8px}
+        .toast.show{transform:translateY(0);opacity:1}
+
+        .particles{position:fixed;top:0;left:260px;right:0;bottom:0;pointer-events:none;z-index:0;overflow:hidden}
+        .particle{position:absolute;width:4px;height:4px;border-radius:50%;opacity:.15;animation:particleFloat linear infinite}
+        @keyframes particleFloat{0%{transform:translateY(100vh) rotate(0deg);opacity:0}10%{opacity:.15}90%{opacity:.15}100%{transform:translateY(-10vh) rotate(720deg);opacity:0}}
+
+        ::-webkit-scrollbar{width:6px;height:6px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:var(--surface1);border-radius:3px}
+        ::-webkit-scrollbar-thumb:hover{background:var(--surface2)}
+
+        @keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+        @media(max-width:860px){
+            .app{grid-template-columns:1fr}
+            .sidebar{transform:translateX(-100%)}
+            .sidebar.open{transform:translateX(0)}
+            .main{grid-column:1}
+            .hamburger{display:block}
+            .content{padding:20px 16px 80px}
+            .topbar{padding:12px 16px}
+            .card-body{flex-direction:column}
+            .card-ctrl{align-items:flex-start;width:100%}
+            .input,.sel{width:100%;min-width:auto}
+            .stepper{width:100%}.stepper input{flex:1}
+            .range-wrap{align-items:flex-start;width:100%}
+            .range-wrap input[type=range]{width:100%}
+            .topbar-actions .btn-text{display:none}
+            .seed-card{flex-wrap:wrap}
+            .particles{left:0}
+        }
+        .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(24,25,38,.5);z-index:199}
+        .sidebar-overlay.show{display:block}
+    </style>
+</head>
+<body>
+<div class="particles" id="particles"></div>
+<div class="app">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <h1><span class="brand-icon">⛏️</span>Server Config</h1>
+            <p>Bedrock Dedicated Server</p>
+        </div>
+        <nav class="sidebar-nav" id="sidebarNav"></nav>
+        <div class="nav-progress">
+            <div class="nav-progress-label"><span>📜 Progress</span><span class="nav-progress-pct" id="navProgressPct">0%</span></div>
+            <div class="nav-progress-bar"><div class="nav-progress-fill" id="navProgressFill"></div></div>
+            <div class="nav-progress-hint show" id="navProgressHint">Keep scrolling to see all options!</div>
+        </div>
+        <div class="sidebar-footer">
+            <button class="btn-save-sidebar" onclick="downloadConfig()">💾 Save server.properties</button>
+        </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <div class="main">
+        <header class="topbar">
+            <div class="topbar-inner">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                <div class="search-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="searchInput" placeholder="Search properties…" oninput="filterProps()">
+                </div>
+                <div class="topbar-actions">
+                    <button class="btn btn-ghost" onclick="resetAll()">↺ <span class="btn-text">Reset</span></button>
+                    <button class="btn btn-ghost" onclick="openImport()">📂 <span class="btn-text">Import</span></button>
+                    <button class="btn btn-accent" onclick="openPreview()">👁 <span class="btn-text">Preview</span></button>
+                    <button class="btn btn-green" onclick="downloadConfig()">💾 <span class="btn-text">Save</span></button>
+                </div>
+            </div>
+        </header>
+        <div class="content" id="content"></div>
+    </div>
+</div>
+
+<div class="overlay" id="previewOverlay">
+    <div class="modal">
+        <h2>📄 server.properties</h2>
+        <pre id="previewPre"></pre>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" onclick="copyConfig()">📋 Copy</button>
+            <button class="btn btn-green" onclick="downloadConfig();closeOv('previewOverlay')">💾 Download</button>
+            <button class="btn btn-ghost" onclick="closeOv('previewOverlay')">Close</button>
+        </div>
+    </div>
+</div>
+<div class="overlay" id="importOverlay">
+    <div class="modal">
+        <h2>📂 Import Configuration</h2>
+        <p class="import-hint">Upload an existing server.properties file or paste its contents below.</p>
+        <div class="file-row"><input type="file" id="fileInput" accept=".properties,.txt"></div>
+        <textarea id="importArea" placeholder="# Paste server.properties content here…"></textarea>
+        <div class="modal-foot">
+            <button class="btn btn-accent" onclick="applyImport()">Apply</button>
+            <button class="btn btn-ghost" onclick="closeOv('importOverlay')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Save Instructions Overlay -->
+<div class="overlay" id="saveOverlay">
+    <div class="modal" style="max-width: 480px;">
+        <h2>📂 File Downloaded!</h2>
+        <p class="import-hint">
+            Your <strong>server.properties</strong> file has been downloaded to your browser's Downloads folder.<br><br>
+            Please copy the downloaded <strong>server.properties</strong> file to:<br>
+            <code style="background:var(--surface0); padding:4px 8px; border-radius:6px; color:var(--mauve); display:inline-block; margin-top:8px; word-break:break-all;">C:\Bedrock\Server</code>
+        </p>
+        <div class="modal-foot">
+            <button class="btn btn-green" onclick="closeOv('saveOverlay')">Done</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SEEDS=[
+    {emoji:"⚔️",title:"Best Overall Survival",seed:"8074986196338038296",desc:"Plains village with iron golem, exposed cave, and trial chambers below."},
+    {emoji:"🏗️",title:"Best Building World",seed:"5313654000673944644",desc:"Massive cherry blossom mountain range with waterfalls and flat plateaus."},
+    {emoji:"🏃",title:"Best Speedrun Seed",seed:"6000009252190354262",desc:"Village blacksmith at spawn with a stronghold only 800 blocks out."},
+    {emoji:"❄️",title:"Rarest Biome Combo",seed:"618995971723249682",desc:"Cherry blossom grove directly bordering ice spikes at spawn."},
+    {emoji:"🗺️",title:"Best Exploration",seed:"8465694128627486472",desc:"The viral Everything Continent — 47 biomes within 2000 blocks of spawn."}
+];
+
+const SECTIONS=[
+    {id:"general",name:"General",icon:"🏠",color:"var(--blue)",props:[
+        {key:"server-name",type:"text",def:"Dedicated Server",desc:"The name shown to players browsing for servers.",allowed:"Any string without semicolon.",c:false},
+        {key:"level-name",type:"text",def:"Bedrock level",desc:"The world folder name on disk.",allowed:"Any string without semicolons or illegal filename characters.",c:false},
+        {key:"level-seed",type:"seed",def:"",desc:"World generation seed. Leave empty for random.",allowed:"Any string.",c:false},
+        {key:"gamemode",type:"select",opts:["survival","creative","adventure"],def:"survival",desc:"Game mode assigned to new players.",c:false},
+        {key:"difficulty",type:"select",opts:["peaceful","easy","normal","hard"],def:"easy",desc:"World difficulty level.",c:false},
+        {key:"force-gamemode",type:"bool",def:false,desc:"Force the configured gamemode on all players.",c:false},
+        {key:"allow-cheats",type:"bool",def:false,desc:"Allow players to use cheat commands.",c:false}
+    ]},
+    {id:"network",name:"Network",icon:"🌐",color:"var(--mauve)",props:[
+        {key:"server-port",type:"num",def:19132,min:1,max:65535,desc:"IPv4 listening port.",allowed:"1–65535.",c:false},
+        {key:"server-portv6",type:"num",def:19133,min:1,max:65535,desc:"IPv6 listening port. Ignored with nethernet transport.",allowed:"1–65535.",c:false},
+        {key:"server-ip",type:"text",def:"",desc:"Bind to a specific IP. Empty = all interfaces.",allowed:"IPv4/IPv6 literal or empty.",c:true},
+        {key:"server-udp-ports",type:"text",def:"",desc:"UDP transport port configuration. Ignored with raknet.",allowed:"Port ranges or external:internal mappings.",c:true},
+        {key:"transport",type:"select",opts:["raknet","nethernet"],def:"raknet",desc:"Network transport protocol.",c:false},
+        {key:"enable-lan-visibility",type:"bool",def:true,desc:"Respond to LAN discovery broadcasts.",c:false},
+        {key:"compression-threshold",type:"num",def:1,min:0,max:65535,desc:"Minimum payload size before compression.",allowed:"0–65535.",c:false},
+        {key:"compression-algorithm",type:"select",opts:["zlib","snappy"],def:"zlib",desc:"Network compression algorithm.",c:false}
+    ]},
+    {id:"world",name:"World",icon:"🌍",color:"var(--green)",props:[
+        {key:"view-distance",type:"num",def:32,min:5,max:96,desc:"Max view distance in chunks.",allowed:"≥ 5.",c:false},
+        {key:"tick-distance",type:"range",def:4,min:4,max:12,desc:"Simulation distance in chunks from each player.",allowed:"4–12.",c:false},
+        {key:"client-side-chunk-generation-enabled",type:"bool",def:true,desc:"Let clients generate decorative chunks beyond interaction range.",c:false},
+        {key:"server-build-radius-ratio",type:"text",def:"Disabled",desc:"Server-side view generation ratio. 'Disabled' = auto.",allowed:"'Disabled' or 0.0–1.0.",c:false},
+        {key:"block-network-ids-are-hashes",type:"bool",def:true,desc:"Use stable hash-based block IDs instead of sequential.",c:false}
+    ]},
+    {id:"players",name:"Players",icon:"👥",color:"var(--peach)",props:[
+        {key:"max-players",type:"num",def:10,min:1,max:1000,desc:"Maximum simultaneous players.",allowed:"Positive integer.",c:false},
+        {key:"default-player-permission-level",type:"select",opts:["visitor","member","operator"],def:"member",desc:"Default permission for first-time players.",c:false},
+        {key:"player-idle-timeout",type:"num",def:30,min:0,max:9999,desc:"Kick after N minutes idle. 0 = never.",allowed:"Non-negative integer.",c:false},
+        {key:"allow-player-joining",type:"bool",def:true,desc:"When false, joining requires script approval.",c:true},
+        {key:"texturepack-required",type:"bool",def:false,desc:"Force clients to use server texture packs.",c:false},
+        {key:"disable-persona",type:"bool",def:false,desc:"Internal use only.",c:false},
+        {key:"disable-custom-skins",type:"bool",def:false,desc:"Block non-store custom skins.",c:false},
+        {key:"disable-player-interaction",type:"bool",def:false,desc:"Clients ignore other players in world.",c:false}
+    ]},
+    {id:"security",name:"Security",icon:"🔒",color:"var(--red)",props:[
+        {key:"online-mode",type:"bool",def:true,desc:"Require Xbox Live authentication.",c:false},
+        {key:"allow-list",type:"bool",def:true,desc:"Only allow players listed in allowlist.json.",c:false}
+    ]},
+    {id:"performance",name:"Performance",icon:"⚡",color:"var(--teal)",props:[
+        {key:"max-threads",type:"num",def:8,min:0,max:128,desc:"Max server threads. 0 = automatic.",allowed:"Non-negative integer.",c:false}
+    ]},
+    {id:"chat",name:"Chat",icon:"💬",color:"var(--yellow)",props:[
+        {key:"chat-restriction",type:"select",opts:["None","Dropped","Disabled"],def:"None",desc:"None = free. Dropped = silently blocked. Disabled = UI hidden.",c:false}
+    ]},
+    {id:"anticheat",name:"Anti-Cheat",icon:"🛡️",color:"var(--maroon)",props:[
+        {key:"server-authoritative-movement-strict",type:"bool",def:false,desc:"Strict position validation.",c:false},
+        {key:"server-authoritative-dismount-strict",type:"bool",def:false,desc:"Strict dismount position checks.",c:false},
+        {key:"server-authoritative-entity-interactions-strict",type:"bool",def:false,desc:"Strict entity interaction validation.",c:false},
+        {key:"player-position-acceptance-threshold",type:"num",def:0.5,min:0,max:10,step:0.1,desc:"Position tolerance. Above 1.0 may allow cheating.",allowed:"≤ 1.0 recommended.",c:false},
+        {key:"player-movement-action-direction-threshold",type:"num",def:0.85,min:0,max:1,step:0.01,desc:"Attack/look direction match. 1 = exact, 0 = 90° tolerance.",allowed:"0–1.",c:false},
+        {key:"server-authoritative-block-breaking-pick-range-scalar",type:"num",def:1.5,min:0,max:10,step:0.1,desc:"Block breaking range verification scalar.",c:false}
+    ]},
+    {id:"logging",name:"Content Logging",icon:"📝",color:"var(--sky)",props:[
+        {key:"content-log-file-enabled",type:"bool",def:false,desc:"Log content errors to file.",c:false},
+        {key:"content-log-console-output-enabled",type:"bool",def:false,desc:"Log content errors to console.",c:false},
+        {key:"content-log-level",type:"select",opts:["error","warning","info","verbose"],def:"info",desc:"Minimum log level.",c:false}
+    ]},
+    {id:"scripting",name:"Script Debugging",icon:"🐛",color:"var(--pink)",props:[
+        {key:"allow-outbound-script-debugging",type:"bool",def:false,desc:"Allow debugger 'connect' mode.",c:false},
+        {key:"allow-inbound-script-debugging",type:"bool",def:false,desc:"Allow debugger 'listen' mode.",c:false},
+        {key:"force-inbound-debug-port",type:"num",def:19144,min:1,max:65535,desc:"Lock inbound debugger port.",allowed:"1–65535.",c:true},
+        {key:"script-debugger-auto-attach",type:"select",opts:["disabled","connect","listen"],def:"disabled",desc:"Auto-attach mode at world load.",c:false},
+        {key:"script-debugger-auto-attach-connect-address",type:"text",def:"localhost:19144",desc:"Connect-mode target (host:port).",c:true},
+        {key:"script-debugger-auto-attach-timeout",type:"num",def:0,min:0,max:999999,desc:"Wait time (ms) for debugger at load.",c:true},
+        {key:"script-debugger-passcode",type:"text",def:"",desc:"VSCode connection passcode.",c:true}
+    ]},
+    {id:"watchdog",name:"Script Watchdog",icon:"🐕",color:"var(--flamingo)",props:[
+        {key:"script-watchdog-enable",type:"bool",def:true,desc:"Enable script watchdog.",c:true},
+        {key:"script-watchdog-enable-exception-handling",type:"bool",def:true,desc:"Handle watchdog exceptions via events.",c:true},
+        {key:"script-watchdog-enable-shutdown",type:"bool",def:true,desc:"Shutdown on unhandled watchdog exception.",c:true},
+        {key:"script-watchdog-hang-exception",type:"bool",def:true,desc:"Throw exception on script hang.",c:true},
+        {key:"script-watchdog-hang-threshold",type:"num",def:10000,min:0,max:999999,desc:"Hang detection threshold (ms).",c:true},
+        {key:"script-watchdog-spike-threshold",type:"num",def:100,min:0,max:999999,desc:"Spike detection threshold (ms).",c:true},
+        {key:"script-watchdog-slow-threshold",type:"num",def:10,min:0,max:999999,desc:"Slow script threshold (ms).",c:true},
+        {key:"script-watchdog-memory-warning",type:"num",def:100,min:0,max:2000,desc:"Memory warning threshold (MB). 0 = off.",c:true},
+        {key:"script-watchdog-memory-limit",type:"num",def:250,min:0,max:2000,desc:"Memory shutdown limit (MB). 0 = off.",c:true}
+    ]},
+    {id:"diagnostics",name:"Diagnostics",icon:"🔧",color:"var(--lavender)",props:[
+        {key:"diagnostics-capture-auto-start",type:"bool",def:false,desc:"Auto-start diagnostics capture.",c:true},
+        {key:"diagnostics-capture-max-files",type:"num",def:5,min:1,max:100,desc:"Max capture files before cycling.",c:true},
+        {key:"diagnostics-capture-max-file-size",type:"num",def:2097152,min:1024,max:104857600,desc:"Max capture file size (bytes).",c:true},
+        {key:"disable-client-vibrant-visuals",type:"bool",def:true,desc:"Force clients off Vibrant Visuals.",c:true},
+        {key:"sentry-rate-limit-window",type:"num",def:60,min:0,max:9999,desc:"Sentry rate limit window (seconds).",c:true},
+        {key:"sentry-max-events-per-window",type:"num",def:10,min:0,max:9999,desc:"Max Sentry events per window.",c:true},
+        {key:"enable-profiler",type:"bool",def:true,desc:"Enable performance profiler.",c:true},
+        {key:"enable-editor-network-metrics",type:"bool",def:true,desc:"Collect editor network metrics.",c:true},
+        {key:"convert-world-to-editor-project",type:"bool",def:false,desc:"Convert world to editor project (needs Editor=true).",c:true}
+    ]}
+];
+
+let vals={},on={};
+function initState(){SECTIONS.forEach(s=>s.props.forEach(p=>{vals[p.key]=p.def;on[p.key]=!p.c}))}
+initState();
+
+function createParticles(){
+    const c=document.getElementById('particles');
+    const colors=['var(--mauve)','var(--pink)','var(--blue)','var(--teal)','var(--green)','var(--peach)','var(--lavender)'];
+    for(let i=0;i<20;i++){const d=document.createElement('div');d.className='particle';d.style.cssText=`left:${Math.random()*100}%;background:${colors[i%colors.length]};width:${2+Math.random()*3}px;height:${2+Math.random()*3}px;animation-duration:${15+Math.random()*25}s;animation-delay:${Math.random()*20}s;`;c.appendChild(d)}
+}
+
+function updateProgress(){
+    const st=document.documentElement.scrollTop||document.body.scrollTop;
+    const sh=document.documentElement.scrollHeight-document.documentElement.clientHeight;
+    const pct=sh>0?Math.round((st/sh)*100):0;
+    document.getElementById('navProgressFill').style.width=pct+'%';
+    document.getElementById('navProgressPct').textContent=pct+'%';
+    const hint=document.getElementById('navProgressHint');
+    hint.classList.add('show');
+    if(pct>=100) hint.textContent='🎉 You\'ve seen everything!';
+    else if(pct>50) hint.textContent='Almost there! A bit more to go.';
+    else hint.textContent='Keep scrolling to see all options!';
+}
+
+function renderNav(){
+    document.getElementById('sidebarNav').innerHTML=SECTIONS.map((s,i)=>`<div class="nav-item${i===0?' active':''}" data-section="${s.id}" onclick="goSection('${s.id}',this)"><span class="nav-icon">${s.icon}</span><span>${s.name}</span><span class="nav-badge">${s.props.length}</span></div>`).join('');
+}
+
+function render(){
+    let html=`<div class="welcome"><h2><span class="wave">👋</span> Welcome to Server Config</h2><p>Configure your Bedrock Dedicated Server with ease. Adjust settings below, then hit <strong>Save</strong> to download your <code>server.properties</code> file.</p><div class="tip">💡 Pro tip: Press <kbd>Ctrl</kbd>+<kbd>S</kbd> to save anytime</div></div>`;
+    html+=SECTIONS.map((s,si)=>`<div class="section" id="sec-${s.id}"><div class="section-head"><div class="section-icon" style="background:color-mix(in srgb,${s.color} 15%,transparent);color:${s.color}">${s.icon}</div><div class="section-meta"><h2 style="color:${s.color}">${s.name}</h2><span>${s.props.length} propert${s.props.length===1?'y':'ies'}</span></div></div>${s.props.map((p,pi)=>renderCard(p,si*10+pi)).join('')}</div>`).join('');
+    html+=`<div class="done-badge" id="doneBadge"><span class="checkmark">🎉</span><div class="done-title">You've seen everything!</div><p>Hit Save when you're ready to download your config.</p></div>`;
+    document.getElementById('content').innerHTML=html;
+}
+
+function renderCard(p,idx){
+    const dis=p.c&&!on[p.key],dA=dis?'disabled':'';
+    let opt='';
+    if(p.c) opt=`<div class="card-opt"><input type="checkbox" id="en-${p.key}" ${on[p.key]?'checked':''} onchange="toggleProp('${p.key}',this.checked)"><label for="en-${p.key}">Enable this property</label></div>`;
+    return `<div class="card${dis?' disabled':''}" id="c-${p.key}" data-key="${p.key}" style="animation-delay:${idx*30}ms">${opt}<div class="card-body"><div class="card-info"><div class="card-key">${p.key}</div><div class="card-desc">${p.desc}</div>${p.allowed?`<div class="card-allowed">Allowed: ${p.allowed}</div>`:''}${p.type==='seed'?renderSeedPicker():''}</div><div class="card-ctrl">${buildCtrl(p,dA)}<div class="card-default">default: ${p.def===''?'(empty)':p.def}</div></div></div></div>`;
+}
+
+function renderSeedPicker(){
+    const cur=vals['level-seed'];
+    return `<div class="seed-picker"><div class="seed-picker-label">🌱 Popular Seeds — click to use</div><div class="seed-grid">${SEEDS.map(s=>`<div class="seed-card${cur===s.seed?' active':''}" onclick="pickSeed('${s.seed}',this)" data-seed="${s.seed}"><span class="seed-emoji">${s.emoji}</span><div class="seed-info"><div class="seed-title">${s.title}</div><div class="seed-desc">${s.desc}</div></div><span class="seed-val">${s.seed}</span></div>`).join('')}</div></div>`;
+}
+
+function pickSeed(seed,el){
+    const card=el.closest('.card'),inp=card.querySelector('.input'),wasActive=el.classList.contains('active');
+    card.querySelectorAll('.seed-card').forEach(c=>c.classList.remove('active'));
+    if(wasActive){vals['level-seed']='';if(inp)inp.value=''}
+    else{vals['level-seed']=seed;if(inp)inp.value=seed;el.classList.add('active')}
+}
+
+function buildCtrl(p,dA){
+    const v=vals[p.key];
+    switch(p.type){
+        case 'bool':return `<div class="switch-row"><span class="switch-label${v?' on':''}" id="sl-${p.key}">${v?'ON':'OFF'}</span><label class="switch"><input type="checkbox" ${v?'checked':''} ${dA} onchange="setVal('${p.key}',this.checked)"><span class="switch-track"></span></label></div>`;
+        case 'select':return `<select class="sel" ${dA} onchange="setVal('${p.key}',this.value)">${p.opts.map(o=>`<option${v===o?' selected':''}>${o}</option>`).join('')}</select>`;
+        case 'num':{const step=p.step||1,mn=p.min??0,mx=p.max??999999;return `<div class="stepper"><button class="stepper-btn" type="button" ${dA} onclick="stepVal('${p.key}',-${step},${mn},${mx})">−</button><input type="number" value="${v}" step="${step}" min="${mn}" max="${mx}" ${dA} onchange="setNum('${p.key}',this.value,${mn},${mx})" id="inp-${p.key}"><button class="stepper-btn" type="button" ${dA} onclick="stepVal('${p.key}',${step},${mn},${mx})">+</button></div>`}
+        case 'range':return `<div class="range-wrap"><input type="range" min="${p.min}" max="${p.max}" value="${v}" ${dA} oninput="setVal('${p.key}',+this.value);this.nextElementSibling.textContent=this.value"><span class="range-val">${v}</span></div>`;
+        case 'seed':return `<input type="text" class="input" value="${v}" ${dA} placeholder="(random)" oninput="setSeed(this.value)" id="inp-${p.key}">`;
+        default:return `<input type="text" class="input" value="${v}" ${dA} placeholder="(empty)" oninput="setVal('${p.key}',this.value)">`;
+    }
+}
+
+function setVal(k,v){vals[k]=v;const lbl=document.getElementById('sl-'+k);if(lbl){lbl.textContent=v?'ON':'OFF';lbl.classList.toggle('on',!!v)}}
+function setNum(k,v,mn,mx){let n=parseFloat(v);if(isNaN(n))n=mn;n=Math.max(mn,Math.min(mx,n));vals[k]=n;const inp=document.getElementById('inp-'+k);if(inp)inp.value=n}
+function stepVal(k,delta,mn,mx){let cur=parseFloat(vals[k])||0,n=+(cur+delta).toFixed(4);n=Math.max(mn,Math.min(mx,n));vals[k]=n;const inp=document.getElementById('inp-'+k);if(inp)inp.value=n}
+function setSeed(v){vals['level-seed']=v;document.querySelectorAll('.seed-card').forEach(c=>c.classList.toggle('active',c.dataset.seed===v))}
+function toggleProp(k,isOn){on[k]=isOn;const card=document.getElementById('c-'+k);if(!card)return;card.classList.toggle('disabled',!isOn);card.querySelectorAll('input:not([id^="en-"]),select,button.stepper-btn').forEach(el=>el.disabled=!isOn)}
+
+function generate(){
+    let out=[];
+    SECTIONS.forEach(s=>{out.push('# ============================','# '+s.name,'# ============================','');s.props.forEach(p=>{out.push('# '+p.desc);if(p.allowed)out.push('# Allowed values: '+p.allowed);const pfx=on[p.key]?'':'#';let sv=typeof vals[p.key]==='boolean'?(vals[p.key]?'true':'false'):vals[p.key];out.push(pfx+p.key+'='+sv,'')})});
+    return out.join('\n');
+}
+
+function openPreview(){document.getElementById('previewPre').textContent=generate();document.getElementById('previewOverlay').classList.add('open')}
+function closeOv(id){document.getElementById(id).classList.remove('open')}
+
+function downloadConfig(){
+    const b=new Blob([generate()],{type:'text/plain'}),a=document.createElement('a');
+    a.href=URL.createObjectURL(b);
+    a.download='server.properties';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('✅ server.properties saved!');
+    closeOv('previewOverlay');
+    
+    // Show the instructions dialog
+    document.getElementById('saveOverlay').classList.add('open');
+}
+
+function copyConfig(){navigator.clipboard.writeText(generate()).then(()=>toast('📋 Copied to clipboard!')).catch(()=>{const t=document.createElement('textarea');t.value=generate();document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);toast('📋 Copied!')})}
+function resetAll(){if(!confirm('Reset all properties to defaults?'))return;initState();render();toast('↺ Reset to defaults')}
+function openImport(){document.getElementById('importArea').value='';document.getElementById('fileInput').value='';document.getElementById('importOverlay').classList.add('open')}
+
+document.getElementById('fileInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>document.getElementById('importArea').value=ev.target.result;r.readAsText(f)});
+
+function applyImport(){
+    const txt=document.getElementById('importArea').value.trim();
+    if(!txt){toast('⚠️ Nothing to import');return}
+    let n=0;
+    txt.split('\n').forEach(line=>{line=line.trim();let commented=false;if(line.startsWith('#')){const u=line.replace(/^#+\s*/,'');if(u.includes('=')&&/^[a-z][\w-]*=/.test(u)){line=u;commented=true}else return}if(!line.includes('='))return;const eq=line.indexOf('='),k=line.substring(0,eq).trim(),v=line.substring(eq+1).trim();SECTIONS.forEach(s=>s.props.forEach(p=>{if(p.key===k){if(p.type==='bool')vals[k]=v==='true';else if(p.type==='num'||p.type==='range')vals[k]=parseFloat(v)||p.def;else vals[k]=v;on[k]=!commented;n++}}))});
+    render();closeOv('importOverlay');toast('📂 Imported '+n+' properties');
+}
+
+function filterProps(){const q=document.getElementById('searchInput').value.toLowerCase();document.querySelectorAll('.card').forEach(c=>c.style.display=c.textContent.toLowerCase().includes(q)?'':'none');document.querySelectorAll('.section').forEach(s=>s.style.display=s.querySelectorAll('.card:not([style*="display: none"])').length?'':'none')}
+
+function goSection(id,el){document.getElementById('sec-'+id)?.scrollIntoView({behavior:'smooth',block:'start'});document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el?.classList.add('active');closeSidebar()}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('show')}
+
+function setupSpy(){
+    const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const id=e.target.id.replace('sec-','');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.section===id))}})},{threshold:.15,rootMargin:'-80px 0px -65% 0px'});
+    document.querySelectorAll('.section').forEach(s=>obs.observe(s));
+    const doneObs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('show')})},{threshold:.5});
+    const badge=document.getElementById('doneBadge');if(badge)doneObs.observe(badge);
+}
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._tid);t._tid=setTimeout(()=>t.classList.remove('show'),3000)}
+
+['previewOverlay','importOverlay', 'saveOverlay'].forEach(id=>{document.getElementById(id).addEventListener('click',e=>{if(e.target.classList.contains('overlay'))closeOv(id)})});
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();downloadConfig()}});
+window.addEventListener('scroll',updateProgress,{passive:true});
+
+createParticles();renderNav();render();setupSpy();updateProgress();
+</script>
+</body>
+</html>
