@@ -23,7 +23,13 @@ public sealed class SharedState
     public bool   CrashProtection      { get; set; } = true;
     public bool   AutoApplyUpdates     { get; set; } = false;
     public bool   AutoCheckUpdates     { get; set; } = true;
-    public int    UpdateCheckHours     { get; set; } = 24;
+    
+    // Replaced UpdateCheckHours with scheduling properties
+    public string UpdateCheckFreq      { get; set; } = "Daily";
+    public string UpdateCheckDate      { get; set; } = "N/A";
+    public string UpdateCheckTime      { get; set; } = "04:00";
+    public DateTime? NextUpdateCheckDate { get; set; }
+
     public int    MaxBackups           { get; set; } = 3;
     public int    LogRetentionDays     { get; set; } = 30;
     public int    ServerStopTimeout    { get; set; } = 15;
@@ -66,7 +72,6 @@ public sealed class SharedState
     public ConcurrentQueue<string>    PendingServerCommands  { get; } = new();
     public ConcurrentQueue<string>    ServerConsoleHistory   { get; } = new();
 
-    // Fixed record initialization
     public ProgressUpdate PendingProgress = new ProgressUpdate("none", 0);
 
     public void RecomputePaths()

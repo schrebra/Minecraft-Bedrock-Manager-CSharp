@@ -19,8 +19,6 @@ public partial class ScheduleRebootWindow : Window
         for (int i = 0; i < 24; i++) cbHour.Items.Add($"{i:D2}");
         for (int i = 0; i < 60; i++) cbMinute.Items.Add($"{i:D2}");
 
-        chkEnableRestart.IsChecked = _state.ScheduleRebootEnabled;
-        
         switch (_state.ScheduleRebootFreq)
         {
             case "Daily": rbDaily.IsChecked = true; break;
@@ -85,7 +83,6 @@ public partial class ScheduleRebootWindow : Window
         }
 
         // First click: Calculate the date and update the UI
-        _state.ScheduleRebootEnabled = chkEnableRestart.IsChecked ?? false;
         _state.ScheduleRebootFreq = rbDaily.IsChecked == true ? "Daily" :
                                     rbWeekly.IsChecked == true ? "Weekly" :
                                     rbBiweekly.IsChecked == true ? "Biweekly" : "Monthly";
@@ -105,5 +102,8 @@ public partial class ScheduleRebootWindow : Window
         
         _schedSaved = true;
         btnSave.Content = "Apply & Close";
+        
+        // Grey out the controls so they cannot be edited until the window is reopened
+        ConfigPanel.IsEnabled = false;
     }
 }

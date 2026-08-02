@@ -431,8 +431,8 @@
                         <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="CONNECTION" Style="{StaticResource StatLabel}"/>
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Hostname: " Style="{StaticResource InfoKey}"/>
                         <TextBlock Grid.Row="1" Grid.Column="1" x:Name="lblHostname" Text="—" Style="{StaticResource InfoVal}"/>
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Address: " Style="{StaticResource InfoKey}"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="lblIpPort" Text=" " Style="{StaticResource InfoVal}" Foreground="{StaticResource AccentBlue}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="IP:Port: " Style="{StaticResource InfoKey}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="lblIpPort" Text="—" Style="{StaticResource InfoVal}" Foreground="{StaticResource AccentBlue}"/>
                     </Grid>
                 </Border>
 
@@ -503,11 +503,7 @@
                 <Border Grid.Column="1" Style="{StaticResource Card}">
                     <StackPanel>
                         <TextBlock Text="UPDATES" Style="{StaticResource StatLabel}"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,3">
-                            <CheckBox x:Name="chkAutoCheckUpdates" Content="Check every:" Style="{StaticResource SettingsCheckBox}" IsChecked="True"/>
-                            <TextBox x:Name="txtInterval" Width="35" Text="24" VerticalAlignment="Center" Style="{StaticResource LightTextBox}" Padding="3,4" Margin="5,0,0,0"/>
-                            <TextBlock Text="hrs" VerticalAlignment="Center" Margin="4,0,0,0" Foreground="{StaticResource TextSecondary}" FontSize="11"/>
-                        </StackPanel>
+                        <CheckBox x:Name="chkAutoCheckUpdates" Content="Check for Updates" Style="{StaticResource SettingsCheckBox}" IsChecked="True"/>
                         <CheckBox x:Name="chkAutoApplyUpdates" Content="Apply update after download" Style="{StaticResource SettingsCheckBox}" IsChecked="False"/>
                     </StackPanel>
                 </Border>

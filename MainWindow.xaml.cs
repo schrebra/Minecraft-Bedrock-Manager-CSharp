@@ -30,7 +30,6 @@ public partial class MainWindow : Window
     private readonly Dictionary<string, System.Windows.Media.Brush> _serverBrushCache  = new();
 
     private readonly DispatcherTimer _timer;
-    private DateTime _nextUpdateCheck;
     private DateTime _lastGcTime;
     private DateTime _lastServerLogClean;
     private DateTime _pcBootTime;
@@ -58,7 +57,6 @@ public partial class MainWindow : Window
         _timer.Tick += Timer_Tick;
 
         _pcBootTime = GetPcBootTime();
-        _nextUpdateCheck = DateTime.Now.AddHours(_state.UpdateCheckHours);
         _lastGcTime = DateTime.Now;
         _lastServerLogClean = DateTime.Now;
 
@@ -80,7 +78,10 @@ public partial class MainWindow : Window
         chkCrashProtect.IsChecked = _state.CrashProtection;
         chkAutoCheckUpdates.IsChecked = _state.AutoCheckUpdates;
         chkAutoApplyUpdates.IsChecked = _state.AutoApplyUpdates;
-        txtInterval.Text = _state.UpdateCheckHours.ToString();
+        
+        // Grey out the apply updates box if check updates is off
+        chkAutoApplyUpdates.IsEnabled = _state.AutoCheckUpdates;
+        
         txtMaxBackups.Text = _state.MaxBackups.ToString();
         chkScheduleReboot.IsChecked = _state.ScheduleRebootEnabled;
         lblHostname.Text = NetworkHelper.GetHostName();
@@ -163,6 +164,13 @@ public partial class MainWindow : Window
         _state.GuiReady = true;
         UpdatePathLabels();
         UpdateNextRebootLabel();
+
+        // Calculate the initial update check date
+        if (_state.AutoCheckUpdates)
+        {
+            _state.NextUpdateCheckDate = ScheduledRebootService.GetNextRebootDate(
+                _state.UpdateCheckFreq, _state.UpdateCheckDate, _state.UpdateCheckTime);
+        }
 
         var exe = Path.Combine(_state.ServerPath, _state.ServerExecutable);
         if (File.Exists(exe))
@@ -462,12 +470,13 @@ public partial class MainWindow : Window
             }
         }
 
-        if (_state.AutoCheckUpdates && !_state.IsBusy)
+        // Scheduled Update Check Logic
+        if (_state.AutoCheckUpdates && _state.NextUpdateCheckDate.HasValue && !_state.IsBusy)
         {
-            var ts = _nextUpdateCheck - DateTime.Now;
+            var ts = _state.NextUpdateCheckDate.Value - DateTime.Now;
             if (ts.TotalSeconds <= 0)
             {
-                _nextUpdateCheck = DateTime.Now.AddHours(_state.UpdateCheckHours);
+                _state.NextUpdateCheckDate = ScheduledRebootService.GetNextRebootDate(_state.UpdateCheckFreq, _state.UpdateCheckDate, _state.UpdateCheckTime);
                 dotPeriodic.Fill = _statusBrushCache["orange"];
                 StartBackgroundWork(async ct =>
                 {
@@ -478,13 +487,18 @@ public partial class MainWindow : Window
             }
             else
             {
-                lblNextCheck.Text = $"{(int)ts.TotalHours}h {ts.Minutes}m";
+                // Show the exact time of the next check instead of a countdown
+                lblNextCheck.Text = _state.NextUpdateCheckDate.Value.ToString("MMM dd HH:mm");
                 dotPeriodic.Fill = ts.TotalHours < 1 ? _statusBrushCache["red"] : _statusBrushCache["green"];
             }
         }
+        else if (_state.AutoCheckUpdates && !_state.NextUpdateCheckDate.HasValue)
+        {
+            _state.NextUpdateCheckDate = ScheduledRebootService.GetNextRebootDate(_state.UpdateCheckFreq, _state.UpdateCheckDate, _state.UpdateCheckTime);
+        }
         else
         {
-            lblNextCheck.Text = _state.AutoCheckUpdates ? "Checking…" : "Off";
+            lblNextCheck.Text = "Off";
             dotPeriodic.Fill = _statusBrushCache["gray"];
         }
 
@@ -931,11 +945,39 @@ public partial class MainWindow : Window
         chkAutoLaunch.Unchecked     += (_, _) => SaveSettingsAuto();
         chkCrashProtect.Checked     += (_, _) => SaveSettingsAuto();
         chkCrashProtect.Unchecked   += (_, _) => SaveSettingsAuto();
-        chkAutoCheckUpdates.Checked += (_, _) => SaveSettingsAuto();
-        chkAutoCheckUpdates.Unchecked += (_, _) => SaveSettingsAuto();
-        chkAutoApplyUpdates.Checked += (_, _) => SaveSettingsAuto();
+        
+        // Hook for the new Update Check checkbox
+        chkAutoCheckUpdates.Click += (s, e) =>
+        {
+            if (chkAutoCheckUpdates.IsChecked == true)
+            {
+                var dlg = new ScheduleUpdateCheckWindow(_state) { Owner = this };
+                if (dlg.ShowDialog() == true)
+                {
+                    _state.AutoCheckUpdates = true;
+                    _state.NextUpdateCheckDate = ScheduledRebootService.GetNextRebootDate(_state.UpdateCheckFreq, _state.UpdateCheckDate, _state.UpdateCheckTime);
+                    chkAutoApplyUpdates.IsEnabled = true;
+                    SaveSettingsAuto();
+                }
+                else
+                {
+                    // Revert if they cancel the dialog
+                    chkAutoCheckUpdates.IsChecked = false;
+                }
+            }
+            else
+            {
+                _state.AutoCheckUpdates = false;
+                _state.NextUpdateCheckDate = null;
+                chkAutoApplyUpdates.IsEnabled = false;
+                chkAutoApplyUpdates.IsChecked = false;
+                SaveSettingsAuto();
+            }
+        };
+
+        chkAutoApplyUpdates.Checked   += (_, _) => SaveSettingsAuto();
         chkAutoApplyUpdates.Unchecked += (_, _) => SaveSettingsAuto();
-        txtInterval.LostKeyboardFocus += (_, _) => SaveSettingsAuto();
+        
         txtMaxBackups.LostKeyboardFocus += (_, _) => SaveSettingsAuto();
 
         chkScheduleReboot.Checked   += (_, _) =>
@@ -963,8 +1005,6 @@ public partial class MainWindow : Window
         _state.AutoCheckUpdates  = chkAutoCheckUpdates.IsChecked ?? true;
         _state.AutoApplyUpdates  = chkAutoApplyUpdates.IsChecked ?? false;
 
-        if (int.TryParse(txtInterval.Text, out var hrs) && hrs >= 1)
-        { _state.UpdateCheckHours = hrs; _nextUpdateCheck = DateTime.Now.AddHours(hrs); }
         if (int.TryParse(txtMaxBackups.Text, out var bak) && bak >= 1) _state.MaxBackups = bak;
 
         var newPath = txtRootPath.Text;
