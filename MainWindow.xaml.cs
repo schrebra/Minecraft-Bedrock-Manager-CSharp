@@ -37,7 +37,6 @@ public partial class MainWindow : Window
     private int _tickCount;
     private int _commandHistoryIdx = -1;
     private bool _uiInitialized;
-    private IntPtr _minMaxInfoPtr = IntPtr.Zero;
     private readonly List<CancellationTokenSource> _activeCts = new();
     private readonly object _activeCtsLock = new();
 
@@ -53,7 +52,6 @@ public partial class MainWindow : Window
         InitializeComponent();
         BuildBrushCaches();
         
-        // FIX: Populate the UI with the loaded settings
         InitializeUiState();
 
         _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
@@ -74,7 +72,6 @@ public partial class MainWindow : Window
         HookButtons();
     }
 
-    // FIX: Method to load saved state into UI controls
     private void InitializeUiState()
     {
         txtRootPath.Text = _state.RootPath;
@@ -128,8 +125,6 @@ public partial class MainWindow : Window
     {
         var src = PresentationSource.FromVisual(this) as HwndSource;
         if (src == null) return;
-        _minMaxInfoPtr = Marshal.AllocHGlobal(40);
-        for (int i = 0; i < 40; i++) Marshal.WriteByte(_minMaxInfoPtr, i, 0);
         src.AddHook(WndProc);
     }
 
@@ -230,8 +225,7 @@ public partial class MainWindow : Window
 
         var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         AppendLogLine($"{now} [SYSTEM ] -------------------------------------------", "SYSTEM");
-        AppendLogLine($"{now} [SYSTEM ]   Minecraft Bedrock Server Manager v28.4", "SUCCESS");
-        AppendLogLine($"{now} [SYSTEM ]   .NET {Environment.Version}", "SYSTEM");
+        AppendLogLine($"{now} [SYSTEM ]   Minecraft Bedrock Server Manager", "SUCCESS");
         AppendLogLine($"{now} [SYSTEM ] -------------------------------------------", "SYSTEM");
 
         if (!File.Exists(exe))
@@ -484,13 +478,13 @@ public partial class MainWindow : Window
             }
             else
             {
-                lblNextCheck.Text = $"Next Scheduled Update: {(int)ts.TotalHours}h {ts.Minutes}m";
+                lblNextCheck.Text = $"{(int)ts.TotalHours}h {ts.Minutes}m";
                 dotPeriodic.Fill = ts.TotalHours < 1 ? _statusBrushCache["red"] : _statusBrushCache["green"];
             }
         }
         else
         {
-            lblNextCheck.Text = _state.AutoCheckUpdates ? "Next Scheduled Update: Checking…" : "Next Scheduled Update: Off";
+            lblNextCheck.Text = _state.AutoCheckUpdates ? "Checking…" : "Off";
             dotPeriodic.Fill = _statusBrushCache["gray"];
         }
 
@@ -784,8 +778,14 @@ public partial class MainWindow : Window
             if (dlg.ShowDialog() == true)
             {
                 var selectedZip = dlg.FileName;
-                var confirm = System.Windows.MessageBox.Show($"WARNING: This will OVERWRITE all existing configs and worlds with the files from:\n\n{selectedZip}\n\nAre you sure?", "Confirm Restore", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                if (confirm == MessageBoxResult.Yes)
+                
+                // Use our custom themed dialog instead of the default MessageBox
+                var confirmDialog = new RestoreConfirmWindow(selectedZip)
+                {
+                    Owner = this // Centers the dialog on the main window
+                };
+                
+                if (confirmDialog.ShowDialog() == true)
                 {
                     _state.RestoreZipPath = selectedZip;
                     StartBackgroundWork(async _ =>
@@ -846,7 +846,6 @@ public partial class MainWindow : Window
         {
             if (_state.IsBusy) return;
             
-            // Check if the directory exists rather than the IsInstalled flag
             if (!Directory.Exists(_state.ServerPath))
             {
                 System.Windows.MessageBox.Show("Please install the server first (Server directory not found).", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -855,15 +854,11 @@ public partial class MainWindow : Window
 
             try
             {
-                // 1. Define where to save the HTML file (directly in the Server folder)
                 string htmlFilePath = Path.Combine(_state.ServerPath, "bedrock_config_editor.html");
-                
-                // 2. Read the embedded HTML resource using WPF's Resource System
                 var resourceInfo = System.Windows.Application.GetResourceStream(new Uri("pack://application:,,,/ConfigEditor.html", UriKind.Absolute));
                 
                 if (resourceInfo != null)
                 {
-                    // FIX: Copy raw bytes directly to disk to preserve HTML encoding
                     using (var fileStream = new FileStream(htmlFilePath, FileMode.Create, FileAccess.Write))
                     {
                         resourceInfo.Stream.CopyTo(fileStream);
@@ -875,59 +870,10 @@ public partial class MainWindow : Window
                     return;
                 }
 
-                // 3. Open the HTML file using the user's default web browser
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = htmlFilePath,
-                    UseShellExecute = true // This tells Windows to open it with the default browser
-                });
-                
-                LogToManager("SYSTEM", "Opened server.properties web editor in default browser.");
-            }
-            catch (Exception ex)
-            {
-                System.Windows.MessageBox.Show($"Failed to open config editor: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        };
-
-        {
-            if (_state.IsBusy) return;
-            
-            // FIX: Check if the directory exists rather than the IsInstalled flag
-            if (!Directory.Exists(_state.ServerPath))
-            {
-                System.Windows.MessageBox.Show("Please install the server first (Server directory not found).", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            try
-            {
-                // 1. Define where to save the HTML file (directly in the Server folder)
-                string htmlFilePath = Path.Combine(_state.ServerPath, "bedrock_config_editor.html");
-                
-                // 2. Read the embedded HTML resource using WPF's Resource System
-                var resourceInfo = System.Windows.Application.GetResourceStream(new Uri("ConfigEditor.html", UriKind.Relative));
-                
-                if (resourceInfo != null)
-                {
-                    using (var reader = new StreamReader(resourceInfo.Stream))
-                    {
-                        string htmlContent = reader.ReadToEnd();
-                        // 3. Write the HTML file to disk
-                        File.WriteAllText(htmlFilePath, htmlContent);
-                    }
-                }
-                else
-                {
-                    System.Windows.MessageBox.Show("Config editor resource not found.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                // 4. Open the HTML file using the user's default web browser
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = htmlFilePath,
-                    UseShellExecute = true // This tells Windows to open it with the default browser
+                    UseShellExecute = true
                 });
                 
                 LogToManager("SYSTEM", "Opened server.properties web editor in default browser.");
@@ -977,7 +923,8 @@ public partial class MainWindow : Window
 
     private void HookSettingsAutoSave()
     {
-        txtRootPath.TextChanged      += (_, _) => SaveSettingsAuto();
+        // TextChanged causes disk I/O on every keystroke. LostKeyboardFocus is safer.
+        txtRootPath.LostKeyboardFocus += (_, _) => SaveSettingsAuto();
         chkAutoStart.Checked        += (_, _) => SaveSettingsAuto();
         chkAutoStart.Unchecked      += (_, _) => SaveSettingsAuto();
         chkAutoLaunch.Checked       += (_, _) => SaveSettingsAuto();
@@ -988,8 +935,8 @@ public partial class MainWindow : Window
         chkAutoCheckUpdates.Unchecked += (_, _) => SaveSettingsAuto();
         chkAutoApplyUpdates.Checked += (_, _) => SaveSettingsAuto();
         chkAutoApplyUpdates.Unchecked += (_, _) => SaveSettingsAuto();
-        txtInterval.TextChanged     += (_, _) => SaveSettingsAuto();
-        txtMaxBackups.TextChanged   += (_, _) => SaveSettingsAuto();
+        txtInterval.LostKeyboardFocus += (_, _) => SaveSettingsAuto();
+        txtMaxBackups.LostKeyboardFocus += (_, _) => SaveSettingsAuto();
 
         chkScheduleReboot.Checked   += (_, _) =>
         {
@@ -1048,19 +995,19 @@ public partial class MainWindow : Window
             _state.NextRebootDate = next;
             if (next.HasValue)
             {
-                lblNextReboot.Text = "Next Scheduled Server Reboot: " + next.Value.ToString("MMM dd HH:mm");
+                lblNextReboot.Text = next.Value.ToString("MMM dd HH:mm");
                 dotReboot.Fill = _statusBrushCache["green"];
             }
             else
             {
-                lblNextReboot.Text = "Next Scheduled Server Reboot: Invalid";
+                lblNextReboot.Text = "Invalid";
                 dotReboot.Fill = _statusBrushCache["red"];
             }
         }
         else
         {
             _state.NextRebootDate = null;
-            lblNextReboot.Text = "Next Scheduled Server Reboot: Off";
+            lblNextReboot.Text = "Off";
             dotReboot.Fill = _statusBrushCache["gray"];
         }
     }
@@ -1224,7 +1171,6 @@ public partial class MainWindow : Window
         _timer.Stop();
         _state.WindowClosed = true;
         ConfigManager.Save(_state);
-        if (_minMaxInfoPtr != IntPtr.Zero) { try { Marshal.FreeHGlobal(_minMaxInfoPtr); } catch { } _minMaxInfoPtr = IntPtr.Zero; }
         lock (_activeCtsLock)
         {
             foreach (var cts in _activeCts) cts.Cancel();

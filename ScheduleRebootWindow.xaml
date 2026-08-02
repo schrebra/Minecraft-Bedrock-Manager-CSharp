@@ -2,7 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Configure Scheduled Reboot" Height="350" Width="400"
-        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Background="#24273A">
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Background="#24273A"
+        FontFamily="pack://application:,,,/Fonts/#NOTOSANSMONO-REGULAR">
     <Window.Resources>
         <SolidColorBrush x:Key="BgCard" Color="#363A4F"/>
         <SolidColorBrush x:Key="BgInput" Color="#494D64"/>
@@ -13,7 +14,6 @@
         <SolidColorBrush x:Key="AccentBlue" Color="#8AADF4"/>
         <SolidColorBrush x:Key="AccentGreen" Color="#A6DA95"/>
         
-        <!-- Style to force drop-down list items to have black text -->
         <Style x:Key="ComboBoxItemStyle" TargetType="ComboBoxItem">
             <Setter Property="Foreground" Value="Black"/>
         </Style>
@@ -36,15 +36,12 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                     <Label Name="lblDate" Content="Day:" Width="90" Padding="0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-                    <!-- Changed Foreground to Black -->
                     <ComboBox Name="cbDate" Width="100" IsEnabled="False" Background="{StaticResource BgInput}" Foreground="Black" ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                     <Label Content="Time:" Width="90" Padding="0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-                    <!-- Changed Foreground to Black -->
                     <ComboBox Name="cbHour" Width="50" Background="{StaticResource BgInput}" Foreground="Black" ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
                     <Label Content=":" VerticalAlignment="Center" Margin="2,0,2,0" Foreground="{StaticResource TextSecondary}"/>
-                    <!-- Changed Foreground to Black -->
                     <ComboBox Name="cbMinute" Width="50" Background="{StaticResource BgInput}" Foreground="Black" ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
                     <TextBlock Text="(24h format)" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="{StaticResource TextMuted}"/>
                 </StackPanel>
@@ -56,6 +53,7 @@
                 </Border>
             </StackPanel>
         </GroupBox>
-        <Button Name="btnSave" Grid.Row="2" Content="Save Configuration" HorizontalAlignment="Right" Width="120" Padding="5" Margin="0,10,0,0" Background="{StaticResource AccentGreen}" Foreground="#24273A" FontWeight="SemiBold"/>
+        <Button Name="btnSave" Grid.Row="2" Content="Save Configuration" HorizontalAlignment="Right" Width="120" Padding="5" Margin="0,10,0,0" Background="{StaticResource AccentGreen}" Foreground="#24273A" FontWeight="SemiBold"
+                FontFamily="pack://application:,,,/Fonts/#NOTOSANS-REGULAR"/>
     </Grid>
 </Window>
