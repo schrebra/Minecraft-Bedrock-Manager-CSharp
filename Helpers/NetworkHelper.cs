@@ -38,8 +38,11 @@ public static class NetworkHelper
         {
             if (ni.OperationalStatus != OperationalStatus.Up) continue;
             if (ni.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
+            
             var name = ni.Name;
-            if (name.Contains("VMware") || name.Contains("VirtualBox") || name.Contains("vEthernet"))
+            if (name.Contains("VMware") || name.Contains("VirtualBox") || name.Contains("vEthernet") ||
+                name.Contains("Hyper-V") || name.Contains("Docker") || name.Contains("WSL") || 
+                name.Contains("TAP") || name.Contains("Tun"))
                 continue;
 
             foreach (var ip in ni.GetIPProperties().UnicastAddresses)
