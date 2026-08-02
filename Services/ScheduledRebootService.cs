@@ -16,7 +16,8 @@ public static class ScheduledRebootService
         return freq switch
         {
             "Daily" => targetToday >= now ? targetToday : targetToday.AddDays(1),
-            "Weekly" or "Biweekly" => ComputeWeekly(dateVal, now, hour, minute),
+            "Weekly" => ComputeWeekly(dateVal, now, hour, minute),
+            "Biweekly" => ComputeBiweekly(dateVal, now, hour, minute),
             "Monthly" => ComputeMonthly(dateVal, now, hour, minute),
             _ => null
         };
@@ -28,6 +29,15 @@ public static class ScheduledRebootService
         int daysAhead = ((int)targetDay - (int)now.DayOfWeek + 7) % 7;
         var target = now.Date.AddDays(daysAhead).AddHours(hour).AddMinutes(minute);
         if (target < now) target = target.AddDays(7);
+        return target;
+    }
+
+    private static DateTime ComputeBiweekly(string dayOfWeekStr, DateTime now, int hour, int minute)
+    {
+        var targetDay = (DayOfWeek)Enum.Parse(typeof(DayOfWeek), dayOfWeekStr);
+        int daysAhead = ((int)targetDay - (int)now.DayOfWeek + 7) % 7;
+        var target = now.Date.AddDays(daysAhead).AddHours(hour).AddMinutes(minute);
+        if (target < now) target = target.AddDays(14);
         return target;
     }
 

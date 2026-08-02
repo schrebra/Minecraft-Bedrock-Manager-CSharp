@@ -61,11 +61,11 @@ public static class ServerProcessService
             s.IsRunning = true; s.ExpectedToRun = true;
             s.ServerProcess = null; s.ServerProcessId = existing.Id;
             try { s.ServerStartTime = existing.StartTime; } catch { s.ServerStartTime = DateTime.Now; }
-            setStatus("lblServerStatus", $"RUNNING (PID {existing.Id} — adopted, no stdin)", "green");
+            setStatus("lblServerStatus", $"RUNNING (PID {existing.Id} - adopted, no stdin)", "green");
             var (h, ip) = NetworkHelper.GetServerConnectionInfo(s.ServerPath);
             setStatus("lblHostname", h, "white");
             setStatus("lblIpPort",   ip, "blue");
-            log("WARN", $"Server is already running (PID {existing.Id}). Adopted process — stdin wrapper unavailable.");
+            log("WARN", $"Server is already running (PID {existing.Id}). Adopted process - stdin wrapper unavailable.");
             return;
         }
 
@@ -73,8 +73,8 @@ public static class ServerProcessService
         { log("WARN", $"Server already running through wrapper (PID {s.ServerProcess.Id})."); return; }
 
         FirewallHelper.EnsureRule(exe, log);
-        log("SYSTEM", "Starting server with stdin/stdout wrapper…");
-        setStatus("lblServerStatus", "STARTING…", "orange");
+        log("SYSTEM", "Starting server with stdin/stdout wrapper...");
+        setStatus("lblServerStatus", "STARTING...", "orange");
 
         var psi = new ProcessStartInfo
         {
@@ -161,7 +161,7 @@ public static class ServerProcessService
             return;
         }
         log("WARN", $"Stopping server (PID {proc.Id})...");
-        setStatus("lblServerStatus", "STOPPING…", "orange");
+        setStatus("lblServerStatus", "STOPPING...", "orange");
 
         var sp = s.ServerProcess;
         if (sp != null && !sp.HasExited)

@@ -62,11 +62,11 @@ public static class InstallService
             await ServerProcessService.StopGameServerAsync(s, log, setStatus);
 
         setProgress("value", 12);
-        if (TestServerInstalled(s))
+        if (!isFirstSetup && TestServerInstalled(s))
             BackupService.BackupAll(s, log);
 
         setProgress("value", 22);
-        log("INFO", $"Downloading: {filename} …");
+        log("INFO", $"Downloading: {filename} ...");
         ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
         using (var http = new HttpClient { Timeout = TimeSpan.FromSeconds(s.DownloadTimeout) })
@@ -88,7 +88,7 @@ public static class InstallService
         log("SUCCESS", $"Download complete ({sizeMb} MB).");
         setProgress("value", 58);
 
-        log("INFO", $"Extracting server files to {s.ServerPath}…");
+        log("INFO", $"Extracting server files to {s.ServerPath}...");
         ZipFile.ExtractToDirectory(zipPath, s.ServerPath, true);
 
         var extractedExe = Path.Combine(s.ServerPath, s.ServerExecutable);
@@ -118,6 +118,7 @@ public static class InstallService
             setStatus("lblServerStatus", "STOPPED", "red");
 
         setProgress("value", 100);
+        setProgress("reset", 0);
         GC.Collect();
     }
 }
