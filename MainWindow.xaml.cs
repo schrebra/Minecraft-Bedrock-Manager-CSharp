@@ -141,16 +141,11 @@ public partial class MainWindow : Window
                 var mi = new MaximizeHelper.MONITORINFO { cbSize = Marshal.SizeOf<MaximizeHelper.MONITORINFO>() };
                 if (MaximizeHelper.GetMonitorInfo(hMon, ref mi))
                 {
-                    var scale = PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice.M11;
-                    double bp = 6 * scale;
-                    int mW = (mi.rcWork.Right - mi.rcWork.Left) + (int)(bp * 2);
-                    int mH = (mi.rcWork.Bottom - mi.rcWork.Top) + (int)(bp * 2);
-                    int mX = mi.rcWork.Left - (int)bp;
-                    int mY = mi.rcWork.Top  - (int)bp;
-                    Marshal.WriteInt32(lParam, 8,  mW);
-                    Marshal.WriteInt32(lParam, 12, mH);
-                    Marshal.WriteInt32(lParam, 16, mX);
-                    Marshal.WriteInt32(lParam, 20, mY);
+                    // Constrain the maximized window exactly to the monitor's working area
+                    Marshal.WriteInt32(lParam, 8,  mi.rcWork.Right - mi.rcWork.Left);
+                    Marshal.WriteInt32(lParam, 12, mi.rcWork.Bottom - mi.rcWork.Top);
+                    Marshal.WriteInt32(lParam, 16, mi.rcWork.Left);
+                    Marshal.WriteInt32(lParam, 20, mi.rcWork.Top);
                     handled = true;
                 }
             }
