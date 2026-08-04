@@ -79,7 +79,6 @@ public partial class MainWindow : Window
         chkAutoCheckUpdates.IsChecked = _state.AutoCheckUpdates;
         chkAutoApplyUpdates.IsChecked = _state.AutoApplyUpdates;
         
-        // Grey out the apply updates box if check updates is off
         chkAutoApplyUpdates.IsEnabled = _state.AutoCheckUpdates;
         
         txtMaxBackups.Text = _state.MaxBackups.ToString();
@@ -141,7 +140,6 @@ public partial class MainWindow : Window
                 var mi = new MaximizeHelper.MONITORINFO { cbSize = Marshal.SizeOf<MaximizeHelper.MONITORINFO>() };
                 if (MaximizeHelper.GetMonitorInfo(hMon, ref mi))
                 {
-                    // Constrain the maximized window exactly to the monitor's working area
                     Marshal.WriteInt32(lParam, 8,  mi.rcWork.Right - mi.rcWork.Left);
                     Marshal.WriteInt32(lParam, 12, mi.rcWork.Bottom - mi.rcWork.Top);
                     Marshal.WriteInt32(lParam, 16, mi.rcWork.Left);
@@ -160,7 +158,6 @@ public partial class MainWindow : Window
         UpdatePathLabels();
         UpdateNextRebootLabel();
 
-        // Calculate the initial update check date
         if (_state.AutoCheckUpdates)
         {
             _state.NextUpdateCheckDate = ScheduledRebootService.GetNextRebootDate(
@@ -287,6 +284,13 @@ public partial class MainWindow : Window
             {
                 var level = ClassifyServerLine(line);
                 AppendParagraph(rtbServerLog, line, _serverBrushCache.GetValueOrDefault(level, _serverBrushCache["INFO"]));
+                
+                // Detect if the server is trying to shut down but might hang
+                if (line.Contains("Server stop requested."))
+                {
+                    _state.ServerStopRequested = true;
+                    _state.ServerStopRequestedTime = DateTime.Now;
+                }
                 read++;
             }
             while (_state.ServerOutputReader.ErrorQueue.TryDequeue(out var line))
@@ -357,11 +361,23 @@ public partial class MainWindow : Window
             else if (b.Action == "free") _state.IsBusy = false;
         }
 
+        // Hung Process Detection
+        if (_state.ServerStopRequested && _state.ServerStopRequestedTime.HasValue && _state.ServerProcess != null && !_state.ServerProcess.HasExited && (DateTime.Now - _state.ServerStopRequestedTime.Value).TotalSeconds > 30)
+        {
+            AppendLogLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [WARN   ] Server hung during shutdown. Force-killing...", "WARN");
+            try { _state.ServerProcess.Kill(); } catch { }
+            _state.ServerStopRequested = false;
+        }
+
         if (_state.ServerProcess is { HasExited: true } sp2 && !_state.IsBusy)
         {
             int code = sp2.ExitCode;
             _state.ServerConsoleMessages.Enqueue(new LogEntry($"[Process exited with code {code}]", "SYSTEM"));
             AppendLogLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [WARN   ] Server process exited with code {code}.", "WARN");
+            
+            // Reset the stop requested flag since it exited
+            _state.ServerStopRequested = false;
+
             if (!_state.ExpectedToRun)
             {
                 _state.ServerProcess = null; _state.ServerProcessId = null;
@@ -465,7 +481,6 @@ public partial class MainWindow : Window
             }
         }
 
-        // Scheduled Update Check Logic
         if (_state.AutoCheckUpdates && _state.NextUpdateCheckDate.HasValue && !_state.IsBusy)
         {
             var ts = _state.NextUpdateCheckDate.Value - DateTime.Now;
@@ -482,7 +497,6 @@ public partial class MainWindow : Window
             }
             else
             {
-                // Show the exact time of the next check instead of a countdown
                 lblNextCheck.Text = _state.NextUpdateCheckDate.Value.ToString("MMM dd HH:mm");
                 dotPeriodic.Fill = ts.TotalHours < 1 ? _statusBrushCache["red"] : _statusBrushCache["green"];
             }
@@ -788,10 +802,9 @@ public partial class MainWindow : Window
             {
                 var selectedZip = dlg.FileName;
                 
-                // Use our custom themed dialog instead of the default MessageBox
                 var confirmDialog = new RestoreConfirmWindow(selectedZip)
                 {
-                    Owner = this // Centers the dialog on the main window
+                    Owner = this 
                 };
                 
                 if (confirmDialog.ShowDialog() == true)
@@ -932,7 +945,6 @@ public partial class MainWindow : Window
 
     private void HookSettingsAutoSave()
     {
-        // TextChanged causes disk I/O on every keystroke. LostKeyboardFocus is safer.
         txtRootPath.LostKeyboardFocus += (_, _) => SaveSettingsAuto();
         chkAutoStart.Checked        += (_, _) => SaveSettingsAuto();
         chkAutoStart.Unchecked      += (_, _) => SaveSettingsAuto();
@@ -941,7 +953,6 @@ public partial class MainWindow : Window
         chkCrashProtect.Checked     += (_, _) => SaveSettingsAuto();
         chkCrashProtect.Unchecked   += (_, _) => SaveSettingsAuto();
         
-        // Hook for the new Update Check checkbox
         chkAutoCheckUpdates.Click += (s, e) =>
         {
             if (chkAutoCheckUpdates.IsChecked == true)
@@ -956,7 +967,6 @@ public partial class MainWindow : Window
                 }
                 else
                 {
-                    // Revert if they cancel the dialog
                     chkAutoCheckUpdates.IsChecked = false;
                 }
             }

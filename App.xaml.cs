@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Windows;
 using Microsoft.Win32;
 
@@ -59,9 +60,15 @@ public partial class App : System.Windows.Application
                     var url = "https://aka.ms/vs/17/release/vc_redist.x64.exe";
                     var tempFile = Path.Combine(Path.GetTempPath(), "vc_redist.x64.exe");
                     
-                    using (var client = new System.Net.WebClient())
+                    using (var client = new HttpClient())
                     {
-                        client.DownloadFile(url, tempFile);
+                        var response = client.GetAsync(url).GetAwaiter().GetResult();
+                        response.EnsureSuccessStatusCode();
+                        
+                        using (var fs = new FileStream(tempFile, FileMode.Create, FileAccess.Write))
+                        {
+                            response.Content.ReadAsStream().CopyTo(fs);
+                        }
                     }
 
                     var proc = Process.Start(tempFile, "/install /passive /norestart");
