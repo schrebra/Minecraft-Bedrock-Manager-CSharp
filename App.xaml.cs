@@ -47,6 +47,42 @@ public partial class App : System.Windows.Application
                 {
                     SetDontShowAdminWarning(true);
                 }
+
+                // If they requested to relaunch as admin
+                if (adminWarning.RelaunchRequested)
+                {
+                    bool relaunched = false;
+                    try
+                    {
+                        var exePath = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule.FileName;
+                        var startInfo = new ProcessStartInfo(exePath)
+                        {
+                            UseShellExecute = true,
+                            Verb = "runas" // Triggers the UAC prompt
+                        };
+
+                        // Pass along any original startup arguments
+                        foreach (var arg in e.Args)
+                        {
+                            startInfo.ArgumentList.Add(arg);
+                        }
+
+                        Process.Start(startInfo);
+                        relaunched = true;
+                    }
+                    catch (Exception)
+                    {
+                        // User clicked 'No' on the UAC prompt or it failed silently
+                        System.Windows.MessageBox.Show("Could not relaunch as Administrator. Continuing in standard mode.", "Relaunch Canceled", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    
+                    if (relaunched)
+                    {
+                        // Shut down the current non-admin instance
+                        Shutdown();
+                        return;
+                    }
+                }
             }
         }
 

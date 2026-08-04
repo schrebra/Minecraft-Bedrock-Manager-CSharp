@@ -11,7 +11,9 @@
     </WindowChrome.WindowChrome>
     <Window.Resources>
         <SolidColorBrush x:Key="AccentGreen" Color="#A6DA95"/>
+        <SolidColorBrush x:Key="AccentBlue" Color="#8AADF4"/>
         <SolidColorBrush x:Key="AccentRed" Color="#ED8796"/>
+        <SolidColorBrush x:Key="AccentGray" Color="#5B6078"/>
         <SolidColorBrush x:Key="BgCard" Color="#363A4F"/>
         <SolidColorBrush x:Key="BorderDefault" Color="#5B6078"/>
         <SolidColorBrush x:Key="TextPrimary" Color="#CAD3F5"/>
@@ -48,11 +50,13 @@
             <Setter Property="Padding" Value="20,8"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -98,7 +102,7 @@
                 <TextBlock Grid.Row="0" Text="Run as Administrator" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,10"/>
 
                 <StackPanel Grid.Row="1">
-                    <TextBlock Text="For the best experience, please relaunch this application as an Administrator. This allows the Bedrock Server Manager to:" FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <TextBlock Text="For the best experience, run this application as an Administrator. This allows the Bedrock Server Manager to:" FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,0,0,10"/>
 
                     <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
                         <TextBlock Text="🛡️" FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center" Foreground="White"/>
@@ -111,9 +115,11 @@
                     </StackPanel>
                 </StackPanel>
 
+                <!-- Buttons -->
                 <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
                     <CheckBox x:Name="chkDontShowAgain" Content="Don't show me again" Foreground="{StaticResource TextSecondary}" Margin="0,0,15,0" VerticalAlignment="Center" FontSize="11"/>
-                    <Button x:Name="btnOk" Content="Got it!" Background="{StaticResource AccentGreen}" Style="{StaticResource ActionButton}"/>
+                    <Button x:Name="btnContinue" Content="Continue Anyway" Background="{StaticResource AccentGray}" Foreground="#CAD3F5" Style="{StaticResource ActionButton}" Margin="0,0,10,0"/>
+                    <Button x:Name="btnRelaunch" Content="🚀 Relaunch as Admin" Background="{StaticResource AccentGreen}" Style="{StaticResource ActionButton}"/>
                 </StackPanel>
             </Grid>
         </Grid>
