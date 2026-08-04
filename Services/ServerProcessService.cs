@@ -117,6 +117,10 @@ public static class ServerProcessService
         s.ServerProcess = proc;
         s.ServerProcessId = proc.Id;
 
+        // Reset stale stop requests from previous sessions
+        s.ServerStopRequested = false;
+        s.ServerStopRequestedTime = null;
+
         log("SYSTEM", "Waiting for server to initialize (up to 45 seconds)...");
         Process runningProc = null;
         for (int i = 0; i < 15; i++)

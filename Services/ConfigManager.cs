@@ -30,11 +30,18 @@ public static class ConfigManager
             $"UpdateCheckTime={s.UpdateCheckTime}",
             $"AutoApplyUpdates={s.AutoApplyUpdates}",
             $"LogRetentionDays={s.LogRetentionDays}",
-            $"MaxBackups={s.MaxBackups}",
             $"ScheduleRebootEnabled={s.ScheduleRebootEnabled}",
             $"ScheduleRebootFreq={s.ScheduleRebootFreq}",
             $"ScheduleRebootDate={s.ScheduleRebootDate}",
-            $"ScheduleRebootTime={s.ScheduleRebootTime}"
+            $"ScheduleRebootTime={s.ScheduleRebootTime}",
+            $"LocalBackupEnabled={s.LocalBackupEnabled}",
+            $"LocalBackupPath={s.LocalBackupPath}",
+            $"LocalBackupTime={s.LocalBackupTime}",
+            $"OffsiteBackupEnabled={s.OffsiteBackupEnabled}",
+            $"OffsiteBackupPath={s.OffsiteBackupPath}",
+            $"OffsiteBackupTime={s.OffsiteBackupTime}",
+            $"DontShowAdminWarning={s.DontShowAdminWarning}",
+            $"AdminWarningShownCount={s.AdminWarningShownCount}"
         };
         File.WriteAllLines(cfgPath, lines);
     }
@@ -79,11 +86,18 @@ public static class ConfigManager
                 "UpdateCheckTime"       => st => st.UpdateCheckTime = val,
                 "AutoApplyUpdates"      => st => st.AutoApplyUpdates = val.Equals("True", StringComparison.OrdinalIgnoreCase),
                 "LogRetentionDays"      => st => st.LogRetentionDays = int.Parse(val),
-                "MaxBackups"            => st => st.MaxBackups = int.Parse(val),
                 "ScheduleRebootEnabled" => st => st.ScheduleRebootEnabled = val.Equals("True", StringComparison.OrdinalIgnoreCase),
                 "ScheduleRebootFreq"    => st => st.ScheduleRebootFreq = val,
                 "ScheduleRebootDate"    => st => st.ScheduleRebootDate = val,
                 "ScheduleRebootTime"    => st => st.ScheduleRebootTime = val,
+                "LocalBackupEnabled"    => st => st.LocalBackupEnabled = val.Equals("True", StringComparison.OrdinalIgnoreCase),
+                "LocalBackupPath"       => st => st.LocalBackupPath = val,
+                "LocalBackupTime"       => st => st.LocalBackupTime = val,
+                "OffsiteBackupEnabled"  => st => st.OffsiteBackupEnabled = val.Equals("True", StringComparison.OrdinalIgnoreCase),
+                "OffsiteBackupPath"     => st => st.OffsiteBackupPath = val,
+                "OffsiteBackupTime"     => st => st.OffsiteBackupTime = val,
+                "DontShowAdminWarning"  => st => st.DontShowAdminWarning = val.Equals("True", StringComparison.OrdinalIgnoreCase),
+                "AdminWarningShownCount"=> st => st.AdminWarningShownCount = int.Parse(val),
                 _ => null
             };
             apply?.Invoke(s);

@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Windows;
 using Microsoft.Win32;
+using BedrockServerManager.Models;
+using BedrockServerManager.Services;
 
 namespace BedrockServerManager;
 
@@ -13,42 +13,35 @@ public partial class App : System.Windows.Application
 {
     public static string[] StartupArgs { get; private set; }
 
-    private static string UiSettingsPath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "BedrockServerManager", "ui_settings.ini");
-
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
         
         StartupArgs = e.Args;
         
+        var tempState = new SharedState();
+        for (int i = 0; i < e.Args.Length - 1; i++)
+            if (e.Args[i].Equals("-RootPath", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(e.Args[i + 1]))
+                tempState.RootPath = e.Args[i + 1];
+
+        ConfigManager.Load(tempState);
+
         // Check for Admin
         if (!IsAdmin())
         {
-            // Check if the user previously chose "Don't show me again"
-            if (!GetDontShowAdminWarning())
+            // Only show the dialog if the user hasn't dismissed it permanently
+            if (!tempState.DontShowAdminWarning)
             {
-                int shownCount = GetAdminWarningCount();
-                
-                var adminWarning = new AdminWarningWindow
-                {
-                    // Show the checkbox only if this is the 2nd launch (or later)
-                    ShowDontShowAgain = shownCount >= 1
-                };
-                
+                var adminWarning = new AdminWarningWindow();
                 adminWarning.ShowDialog();
                 
-                // Increment the count and save it
-                SetAdminWarningCount(shownCount + 1);
-
-                // If they checked the box, save the preference
+                // If they checked "Don't show me again" OR clicked "Relaunch as Admin", save that preference
                 if (adminWarning.DontShowAgain)
                 {
-                    SetDontShowAdminWarning(true);
+                    tempState.DontShowAdminWarning = true;
+                    ConfigManager.Save(tempState);
                 }
 
-                // If they requested to relaunch as admin
                 if (adminWarning.RelaunchRequested)
                 {
                     bool relaunched = false;
@@ -58,10 +51,9 @@ public partial class App : System.Windows.Application
                         var startInfo = new ProcessStartInfo(exePath)
                         {
                             UseShellExecute = true,
-                            Verb = "runas" // Triggers the UAC prompt
+                            Verb = "runas"
                         };
 
-                        // Pass along any original startup arguments
                         foreach (var arg in e.Args)
                         {
                             startInfo.ArgumentList.Add(arg);
@@ -72,13 +64,11 @@ public partial class App : System.Windows.Application
                     }
                     catch (Exception)
                     {
-                        // User clicked 'No' on the UAC prompt or it failed silently
                         System.Windows.MessageBox.Show("Could not relaunch as Administrator. Continuing in standard mode.", "Relaunch Canceled", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     
                     if (relaunched)
                     {
-                        // Shut down the current non-admin instance
                         Shutdown();
                         return;
                     }
@@ -143,116 +133,5 @@ public partial class App : System.Windows.Application
             if (key?.GetValue("Installed") is int val && val == 1) return true;
         }
         return false;
-    }
-
-    private static int GetAdminWarningCount()
-    {
-        try
-        {
-            if (File.Exists(UiSettingsPath))
-            {
-                var lines = File.ReadAllLines(UiSettingsPath);
-                foreach (var line in lines)
-                {
-                    if (line.Trim().StartsWith("AdminWarningShownCount=", StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (int.TryParse(line.Substring("AdminWarningShownCount=".Length).Trim(), out int count))
-                            return count;
-                    }
-                }
-            }
-        }
-        catch { }
-        return 0;
-    }
-
-    private static void SetAdminWarningCount(int count)
-    {
-        try
-        {
-            var dir = Path.GetDirectoryName(UiSettingsPath);
-            if (dir != null && !Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-
-            var lines = new List<string>();
-            bool found = false;
-
-            if (File.Exists(UiSettingsPath))
-            {
-                lines = File.ReadAllLines(UiSettingsPath).ToList();
-                for (int i = 0; i < lines.Count; i++)
-                {
-                    if (lines[i].Trim().StartsWith("AdminWarningShownCount=", StringComparison.OrdinalIgnoreCase))
-                    {
-                        lines[i] = $"AdminWarningShownCount={count}";
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            
-            if (!found)
-            {
-                lines.Add($"AdminWarningShownCount={count}");
-            }
-
-            File.WriteAllLines(UiSettingsPath, lines);
-        }
-        catch { }
-    }
-
-    private static bool GetDontShowAdminWarning()
-    {
-        try
-        {
-            if (File.Exists(UiSettingsPath))
-            {
-                var lines = File.ReadAllLines(UiSettingsPath);
-                foreach (var line in lines)
-                {
-                    if (line.Trim().StartsWith("DontShowAdminWarning=", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return line.Substring("DontShowAdminWarning=".Length).Trim().Equals("True", StringComparison.OrdinalIgnoreCase);
-                    }
-                }
-            }
-        }
-        catch { }
-        return false;
-    }
-
-    private static void SetDontShowAdminWarning(bool value)
-    {
-        try
-        {
-            var dir = Path.GetDirectoryName(UiSettingsPath);
-            if (dir != null && !Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-
-            var lines = new List<string>();
-            bool found = false;
-
-            if (File.Exists(UiSettingsPath))
-            {
-                lines = File.ReadAllLines(UiSettingsPath).ToList();
-                for (int i = 0; i < lines.Count; i++)
-                {
-                    if (lines[i].Trim().StartsWith("DontShowAdminWarning=", StringComparison.OrdinalIgnoreCase))
-                    {
-                        lines[i] = $"DontShowAdminWarning={value}";
-                        found = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!found)
-            {
-                lines.Add($"DontShowAdminWarning={value}");
-            }
-
-            File.WriteAllLines(UiSettingsPath, lines);
-        }
-        catch { }
     }
 }

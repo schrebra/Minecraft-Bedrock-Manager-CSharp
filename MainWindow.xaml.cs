@@ -81,7 +81,8 @@ public partial class MainWindow : Window
         
         chkAutoApplyUpdates.IsEnabled = _state.AutoCheckUpdates;
         
-        txtMaxBackups.Text = _state.MaxBackups.ToString();
+        chkLocalBackup.IsChecked = _state.LocalBackupEnabled;
+        chkOffsiteBackup.IsChecked = _state.OffsiteBackupEnabled;
         chkScheduleReboot.IsChecked = _state.ScheduleRebootEnabled;
         lblHostname.Text = NetworkHelper.GetHostName();
     }
@@ -285,7 +286,6 @@ public partial class MainWindow : Window
                 var level = ClassifyServerLine(line);
                 AppendParagraph(rtbServerLog, line, _serverBrushCache.GetValueOrDefault(level, _serverBrushCache["INFO"]));
                 
-                // Detect if the server is trying to shut down but might hang
                 if (line.Contains("Server stop requested."))
                 {
                     _state.ServerStopRequested = true;
@@ -361,7 +361,6 @@ public partial class MainWindow : Window
             else if (b.Action == "free") _state.IsBusy = false;
         }
 
-        // Hung Process Detection
         if (_state.ServerStopRequested && _state.ServerStopRequestedTime.HasValue && _state.ServerProcess != null && !_state.ServerProcess.HasExited && (DateTime.Now - _state.ServerStopRequestedTime.Value).TotalSeconds > 30)
         {
             AppendLogLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [WARN   ] Server hung during shutdown. Force-killing...", "WARN");
@@ -375,7 +374,6 @@ public partial class MainWindow : Window
             _state.ServerConsoleMessages.Enqueue(new LogEntry($"[Process exited with code {code}]", "SYSTEM"));
             AppendLogLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [WARN   ] Server process exited with code {code}.", "WARN");
             
-            // Reset the stop requested flag since it exited
             _state.ServerStopRequested = false;
 
             if (!_state.ExpectedToRun)
@@ -435,15 +433,27 @@ public partial class MainWindow : Window
             }
             else lblServerUptime.Text = "—";
 
-            if (Directory.Exists(_state.BackupPath))
+            // Real-time tracking of actual backup files on disk
+            var localBackupPath = string.IsNullOrWhiteSpace(_state.LocalBackupPath) ? _state.BackupPath : _state.LocalBackupPath;
+            if (Directory.Exists(localBackupPath))
             {
-                var latest = new DirectoryInfo(_state.BackupPath)
+                var latestLocal = new DirectoryInfo(localBackupPath)
                     .GetFiles("full_backup_*.zip")
                     .OrderByDescending(f => f.LastWriteTime)
                     .FirstOrDefault();
-                lblLastBackup.Text = latest?.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss") ?? "None";
+                lblLastBackup.Text = latestLocal?.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss") ?? "None";
             }
             else lblLastBackup.Text = "None";
+
+            if (!string.IsNullOrWhiteSpace(_state.OffsiteBackupPath) && Directory.Exists(_state.OffsiteBackupPath))
+            {
+                var latestOffsite = new DirectoryInfo(_state.OffsiteBackupPath)
+                    .GetFiles("full_backup_*.zip")
+                    .OrderByDescending(f => f.LastWriteTime)
+                    .FirstOrDefault();
+                lblLastOffsiteBackup.Text = latestOffsite?.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss") ?? "None";
+            }
+            else lblLastOffsiteBackup.Text = "None";
         }
 
         if (!_state.IsBusy && _state.ExpectedToRun && _state.CrashProtection && !_state.IsRebooting)
@@ -509,6 +519,136 @@ public partial class MainWindow : Window
         {
             lblNextCheck.Text = "Off";
             dotPeriodic.Fill = _statusBrushCache["gray"];
+        }
+
+        // Scheduled Local Backup Logic
+        if (_state.LocalBackupEnabled)
+        {
+            if (!_state.NextLocalBackupDate.HasValue)
+            {
+                var timeParts = _state.LocalBackupTime.Split(':');
+                if (timeParts.Length == 2 && int.TryParse(timeParts[0], out int h) && int.TryParse(timeParts[1], out int m))
+                {
+                    var target = DateTime.Now.Date.AddHours(h).AddMinutes(m);
+                    if (target < DateTime.Now) target = target.AddDays(1);
+                    _state.NextLocalBackupDate = target;
+                }
+            }
+            else if (DateTime.Now >= _state.NextLocalBackupDate.Value)
+            {
+                _state.NextLocalBackupDate = _state.NextLocalBackupDate.Value.AddDays(1);
+                
+                if (!_state.IsBusy && _state.IsInstalled)
+                {
+                    AppendLogLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [SYSTEM ] Scheduled local backup time reached. Starting backup...", "SYSTEM");
+                    SetBusy(true); SetProgress("indeterminate");
+                    StartBackgroundWork(async _ =>
+                    {
+                        try
+                        {
+                            bool wasRunning = _state.IsRunning;
+                            if (wasRunning)
+                            {
+                                LogToManager("SYSTEM", "Pausing server for scheduled backup...");
+                                await ServerProcessService.StopGameServerAsync(_state, LogToManager, SetStatusLabel);
+                            }
+                            
+                            InstallService.InitializeDirectories(_state, LogToManager);
+                            // Only do local
+                            BackupService.BackupAll(_state, LogToManager, true, false);
+                            
+                            if (wasRunning)
+                            {
+                                LogToManager("SYSTEM", "Resuming server after backup...");
+                                await ServerProcessService.StartServerProcessAsync(_state, LogToManager, SetStatusLabel, CancellationToken.None);
+                            }
+                        }
+                        catch (Exception ex) { LogToManager("ERROR", $"Scheduled local backup failed: {ex.Message}"); }
+                        finally { SetProgress("reset"); SetBusy(false); }
+                    });
+                }
+                else
+                {
+                    LogToManager("WARN", $"Scheduled local backup skipped (Manager is busy).");
+                }
+            }
+
+            if (_state.NextLocalBackupDate.HasValue)
+            {
+                lblNextLocalBackup.Text = _state.NextLocalBackupDate.Value.ToString("MMM dd HH:mm");
+                dotLocalBackup.Fill = _statusBrushCache["green"];
+            }
+        }
+        else
+        {
+            lblNextLocalBackup.Text = "Off";
+            dotLocalBackup.Fill = _statusBrushCache["gray"];
+            _state.NextLocalBackupDate = null;
+        }
+
+        // Scheduled Offsite Backup Logic
+        if (_state.OffsiteBackupEnabled)
+        {
+            if (!_state.NextOffsiteBackupDate.HasValue)
+            {
+                var timeParts = _state.OffsiteBackupTime.Split(':');
+                if (timeParts.Length == 2 && int.TryParse(timeParts[0], out int h) && int.TryParse(timeParts[1], out int m))
+                {
+                    var target = DateTime.Now.Date.AddHours(h).AddMinutes(m);
+                    if (target < DateTime.Now) target = target.AddDays(1);
+                    _state.NextOffsiteBackupDate = target;
+                }
+            }
+            else if (DateTime.Now >= _state.NextOffsiteBackupDate.Value)
+            {
+                _state.NextOffsiteBackupDate = _state.NextOffsiteBackupDate.Value.AddDays(1);
+                
+                if (!_state.IsBusy && _state.IsInstalled)
+                {
+                    AppendLogLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [SYSTEM ] Scheduled offsite backup time reached. Starting backup...", "SYSTEM");
+                    SetBusy(true); SetProgress("indeterminate");
+                    StartBackgroundWork(async _ =>
+                    {
+                        try
+                        {
+                            bool wasRunning = _state.IsRunning;
+                            if (wasRunning)
+                            {
+                                LogToManager("SYSTEM", "Pausing server for scheduled backup...");
+                                await ServerProcessService.StopGameServerAsync(_state, LogToManager, SetStatusLabel);
+                            }
+                            
+                            InstallService.InitializeDirectories(_state, LogToManager);
+                            // Only do offsite
+                            BackupService.BackupAll(_state, LogToManager, false, true);
+                            
+                            if (wasRunning)
+                            {
+                                LogToManager("SYSTEM", "Resuming server after backup...");
+                                await ServerProcessService.StartServerProcessAsync(_state, LogToManager, SetStatusLabel, CancellationToken.None);
+                            }
+                        }
+                        catch (Exception ex) { LogToManager("ERROR", $"Scheduled offsite backup failed: {ex.Message}"); }
+                        finally { SetProgress("reset"); SetBusy(false); }
+                    });
+                }
+                else
+                {
+                    LogToManager("WARN", $"Scheduled offsite backup skipped (Manager is busy).");
+                }
+            }
+
+            if (_state.NextOffsiteBackupDate.HasValue)
+            {
+                lblNextOffsiteBackup.Text = _state.NextOffsiteBackupDate.Value.ToString("MMM dd HH:mm");
+                dotOffsiteBackup.Fill = _statusBrushCache["green"];
+            }
+        }
+        else
+        {
+            lblNextOffsiteBackup.Text = "Off";
+            dotOffsiteBackup.Fill = _statusBrushCache["gray"];
+            _state.NextOffsiteBackupDate = null;
         }
 
         if ((DateTime.Now - _lastGcTime).TotalMinutes >= 5)
@@ -785,7 +925,8 @@ public partial class MainWindow : Window
                 try
                 {
                     InstallService.InitializeDirectories(_state, LogToManager);
-                    BackupService.BackupAll(_state, LogToManager);
+                    // Do both local and offsite based on what is enabled
+                    BackupService.BackupAll(_state, LogToManager, _state.LocalBackupEnabled, _state.OffsiteBackupEnabled);
                 }
                 catch (Exception ex) { LogToManager("ERROR", $"Manual backup failed: {ex.Message}"); }
                 finally { SetProgress("reset"); SetBusy(false); }
@@ -795,7 +936,7 @@ public partial class MainWindow : Window
         btnRestoreBackup.Click += (_, _) =>
         {
             if (_state.IsBusy || !_state.IsInstalled || _state.IsRunning) return;
-            var backupRoot = _state.BackupPath;
+            var backupRoot = string.IsNullOrWhiteSpace(_state.LocalBackupPath) ? _state.BackupPath : _state.LocalBackupPath;
             if (!Directory.Exists(backupRoot)) { System.Windows.MessageBox.Show("Backup directory does not exist.", "Restore", MessageBoxButton.OK, MessageBoxImage.Information); return; }
             var dlg = new Microsoft.Win32.OpenFileDialog { InitialDirectory = backupRoot, Filter = "Zip Archives (*.zip)|*.zip", Title = "Select a backup to restore" };
             if (dlg.ShowDialog() == true)
@@ -982,8 +1123,54 @@ public partial class MainWindow : Window
 
         chkAutoApplyUpdates.Checked   += (_, _) => SaveSettingsAuto();
         chkAutoApplyUpdates.Unchecked += (_, _) => SaveSettingsAuto();
-        
-        txtMaxBackups.LostKeyboardFocus += (_, _) => SaveSettingsAuto();
+
+        chkLocalBackup.Click += (s, e) =>
+        {
+            if (chkLocalBackup.IsChecked == true)
+            {
+                var dlg = new LocalBackupWindow(_state) { Owner = this };
+                if (dlg.ShowDialog() == true)
+                {
+                    _state.LocalBackupEnabled = true;
+                    _state.NextLocalBackupDate = null;
+                    SaveSettingsAuto();
+                }
+                else
+                {
+                    chkLocalBackup.IsChecked = false;
+                }
+            }
+            else
+            {
+                _state.LocalBackupEnabled = false;
+                _state.NextLocalBackupDate = null;
+                SaveSettingsAuto();
+            }
+        };
+
+        chkOffsiteBackup.Click += (s, e) =>
+        {
+            if (chkOffsiteBackup.IsChecked == true)
+            {
+                var dlg = new OffsiteBackupWindow(_state) { Owner = this };
+                if (dlg.ShowDialog() == true)
+                {
+                    _state.OffsiteBackupEnabled = true;
+                    _state.NextOffsiteBackupDate = null;
+                    SaveSettingsAuto();
+                }
+                else
+                {
+                    chkOffsiteBackup.IsChecked = false;
+                }
+            }
+            else
+            {
+                _state.OffsiteBackupEnabled = false;
+                _state.NextOffsiteBackupDate = null;
+                SaveSettingsAuto();
+            }
+        };
 
         chkScheduleReboot.Checked   += (_, _) =>
         {
@@ -1009,8 +1196,6 @@ public partial class MainWindow : Window
         _state.CrashProtection   = chkCrashProtect.IsChecked ?? true;
         _state.AutoCheckUpdates  = chkAutoCheckUpdates.IsChecked ?? true;
         _state.AutoApplyUpdates  = chkAutoApplyUpdates.IsChecked ?? false;
-
-        if (int.TryParse(txtMaxBackups.Text, out var bak) && bak >= 1) _state.MaxBackups = bak;
 
         var newPath = txtRootPath.Text;
         var invalid = Path.GetInvalidPathChars();
@@ -1135,7 +1320,7 @@ public partial class MainWindow : Window
     private void UpdatePathLabels()
     {
         lblInstallDir.Text = _state.ServerPath;
-        lblBackupDir.Text  = _state.BackupPath;
+        lblBackupDir.Text  = string.IsNullOrWhiteSpace(_state.LocalBackupPath) ? _state.BackupPath : _state.LocalBackupPath;
         lblLogFile.Text    = _state.LogsPath;
     }
 

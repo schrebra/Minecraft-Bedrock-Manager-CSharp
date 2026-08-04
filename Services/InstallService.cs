@@ -63,7 +63,7 @@ public static class InstallService
 
         setProgress("value", 12);
         if (!isFirstSetup && TestServerInstalled(s))
-            BackupService.BackupAll(s, log);
+            BackupService.BackupAll(s, log, s.LocalBackupEnabled, s.OffsiteBackupEnabled);
 
         setProgress("value", 22);
         log("INFO", $"Downloading: {filename} ...");

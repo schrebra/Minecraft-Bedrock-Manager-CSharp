@@ -267,7 +267,6 @@
         </Style>
     </Window.Resources>
     
-    <!-- Removed Grid.Style margin trigger to fix the maximize border bug -->
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
@@ -315,6 +314,8 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 
                 <!-- Root Directory -->
@@ -344,8 +345,30 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Next Scheduled Update Check -->
+                <!-- Next Local Backup -->
                 <Border Grid.Column="2" Style="{StaticResource Card}" VerticalAlignment="Center">
+                    <StackPanel>
+                        <TextBlock Text="NEXT LOCAL BACKUP" Style="{StaticResource StatLabel}"/>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse x:Name="dotLocalBackup" Width="8" Height="8" Fill="{StaticResource AccentGray}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock x:Name="lblNextLocalBackup" Text="Off" Style="{StaticResource InfoVal}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Next Offsite Backup -->
+                <Border Grid.Column="3" Style="{StaticResource Card}" VerticalAlignment="Center">
+                    <StackPanel>
+                        <TextBlock Text="NEXT OFFSITE BACKUP" Style="{StaticResource StatLabel}"/>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse x:Name="dotOffsiteBackup" Width="8" Height="8" Fill="{StaticResource AccentGray}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock x:Name="lblNextOffsiteBackup" Text="Off" Style="{StaticResource InfoVal}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Next Scheduled Update Check -->
+                <Border Grid.Column="4" Style="{StaticResource Card}" VerticalAlignment="Center">
                     <StackPanel>
                         <TextBlock Text="NEXT SCHEDULED UPDATE CHECK" Style="{StaticResource StatLabel}"/>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -356,9 +379,10 @@
                 </Border>
             </Grid>
             
-            <!-- Row 1: 5 Compact Panels -->
+            <!-- Row 1: 6 Compact Panels -->
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
@@ -452,11 +476,10 @@
                     </Grid>
                 </Border>
 
-                <!-- Panel 5: Uptime & Backup -->
+                <!-- Panel 5: Uptime -->
                 <Border Grid.Column="4" Style="{StaticResource Card}">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
@@ -465,13 +488,31 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="UPTIME &amp; BACKUP" Style="{StaticResource StatLabel}"/>
+                        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="UPTIME" Style="{StaticResource StatLabel}"/>
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="PC Uptime: " Style="{StaticResource InfoKey}"/>
                         <TextBlock Grid.Row="1" Grid.Column="1" x:Name="lblPcUptime" Text="—" Style="{StaticResource InfoVal}"/>
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Server Uptime: " Style="{StaticResource InfoKey}"/>
                         <TextBlock Grid.Row="2" Grid.Column="1" x:Name="lblServerUptime" Text="—" Style="{StaticResource InfoVal}"/>
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Last Backup: " Style="{StaticResource InfoKey}"/>
-                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="lblLastBackup" Text="—" Style="{StaticResource InfoVal}"/>
+                    </Grid>
+                </Border>
+
+                <!-- Panel 6: Backups -->
+                <Border Grid.Column="5" Style="{StaticResource Card}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="BACKUPS" Style="{StaticResource StatLabel}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Local: " Style="{StaticResource InfoKey}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="lblLastBackup" Text="—" Style="{StaticResource InfoVal}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Offsite: " Style="{StaticResource InfoKey}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="lblLastOffsiteBackup" Text="—" Style="{StaticResource InfoVal}"/>
                     </Grid>
                 </Border>
             </Grid>
@@ -512,10 +553,8 @@
                 <Border Grid.Column="3" Style="{StaticResource Card}">
                     <StackPanel>
                         <TextBlock Text="BACKUPS" Style="{StaticResource StatLabel}"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,3">
-                            <TextBlock Text="Keep Backups:" VerticalAlignment="Center" Margin="0,0,4,0" Foreground="{StaticResource TextSecondary}" FontSize="11"/>
-                            <TextBox x:Name="txtMaxBackups" Width="35" Text="3" VerticalAlignment="Center" Style="{StaticResource LightTextBox}" Padding="3,4"/>
-                        </StackPanel>
+                        <CheckBox x:Name="chkLocalBackup" Content="Local Backup Schedule" Style="{StaticResource SettingsCheckBox}" IsChecked="True"/>
+                        <CheckBox x:Name="chkOffsiteBackup" Content="Offsite Backup Schedule" Style="{StaticResource SettingsCheckBox}" IsChecked="False"/>
                     </StackPanel>
                 </Border>
             </Grid>

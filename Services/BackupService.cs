@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -11,13 +12,13 @@ namespace BedrockServerManager.Services;
 
 public static class BackupService
 {
-    public static void BackupAll(SharedState s, Action<string, string> log)
+    public static void BackupAll(SharedState s, Action<string, string> log, bool doLocal, bool doOffsite)
     {
         log("SYSTEM", "Starting full backup (Configs + Worlds)...");
-        Directory.CreateDirectory(s.BackupPath);
+        Directory.CreateDirectory(s.UpdateTempPath);
         var timeStr = DateTime.Now.ToString("yyyyMMdd_HHmmssfff");
         var zipName = $"full_backup_{timeStr}.zip";
-        var zipPath = Path.Combine(s.BackupPath, zipName);
+        var tempZipPath = Path.Combine(s.UpdateTempPath, zipName);
         var stageDir = Path.Combine(s.UpdateTempPath, $"backup_stage_{timeStr}");
         Directory.CreateDirectory(stageDir);
 
@@ -55,25 +56,141 @@ public static class BackupService
                 JsonSerializer.Serialize(manifest));
 
             log("SYSTEM", $"Compressing backup to {zipName}... (This may take a moment)");
-            if (File.Exists(zipPath)) File.Delete(zipPath);
-            ZipFile.CreateFromDirectory(stageDir, zipPath, CompressionLevel.Optimal, false);
+            if (File.Exists(tempZipPath)) File.Delete(tempZipPath);
+            ZipFile.CreateFromDirectory(stageDir, tempZipPath, CompressionLevel.Optimal, false);
 
-            var sizeMb = Math.Round(new FileInfo(zipPath).Length / 1024.0 / 1024.0, 2);
-            log("SUCCESS", $"Backup complete ({sizeMb} MB).");
+            var sizeMb = Math.Round(new FileInfo(tempZipPath).Length / 1024.0 / 1024.0, 2);
+            log("SUCCESS", $"Backup archive created ({sizeMb} MB).");
 
-            var old = Directory.EnumerateFiles(s.BackupPath, "full_backup_*.zip")
-                .OrderByDescending(f => Path.GetFileName(f))
-                .Skip(s.MaxBackups)
-                .ToList();
-                
-            if (old.Count > 0)
+            var actualLocalPath = string.IsNullOrWhiteSpace(s.LocalBackupPath) ? s.BackupPath : s.LocalBackupPath;
+
+            // Local Backup Logic
+            if (doLocal && !string.IsNullOrWhiteSpace(actualLocalPath))
             {
-                log("SYSTEM", $"Purging {old.Count} old backup(s) to retain max {s.MaxBackups}...");
-                foreach (var f in old) File.Delete(f);
+                try
+                {
+                    Directory.CreateDirectory(actualLocalPath);
+                    var localZipPath = Path.Combine(actualLocalPath, zipName);
+                    
+                    log("SYSTEM", $"Copying backup to local location: {actualLocalPath}...");
+                    File.Copy(tempZipPath, localZipPath, true);
+                    log("SUCCESS", "Local backup complete.");
+
+                    PurgeBackupsGFS(actualLocalPath, log);
+                }
+                catch (Exception ex) { log("ERROR", $"Local backup failed: {ex.Message}"); }
+            }
+
+            // Offsite Backup Logic
+            if (doOffsite && !string.IsNullOrWhiteSpace(s.OffsiteBackupPath))
+            {
+                try
+                {
+                    Directory.CreateDirectory(s.OffsiteBackupPath);
+                    var offsiteZipPath = Path.Combine(s.OffsiteBackupPath, zipName);
+                    
+                    log("SYSTEM", $"Copying backup to offsite location: {s.OffsiteBackupPath}...");
+                    File.Copy(tempZipPath, offsiteZipPath, true);
+                    log("SUCCESS", "Offsite backup complete.");
+
+                    PurgeBackupsGFS(s.OffsiteBackupPath, log);
+                }
+                catch (Exception ex) { log("ERROR", $"Offsite backup failed: {ex.Message}"); }
             }
         }
         catch (Exception ex) { log("ERROR", $"Backup failed: {ex.Message}"); }
-        finally { try { if (Directory.Exists(stageDir)) Directory.Delete(stageDir, true); } catch { } }
+        finally 
+        { 
+            try { if (Directory.Exists(stageDir)) Directory.Delete(stageDir, true); } catch { }
+            try { if (File.Exists(tempZipPath)) File.Delete(tempZipPath); } catch { }
+        }
+    }
+
+    private static void PurgeBackupsGFS(string backupPath, Action<string, string> log)
+    {
+        try
+        {
+            var backups = Directory.EnumerateFiles(backupPath, "full_backup_*.zip")
+                .Select(f => new { Path = f, Date = ParseBackupDate(Path.GetFileName(f)) })
+                .Where(x => x.Date.HasValue)
+                .OrderByDescending(x => x.Date!.Value)
+                .ToList();
+
+            var filesToDelete = new List<string>();
+            
+            DateTime lastKeptDaily = DateTime.MinValue;
+            DateTime lastKeptWeekly = DateTime.MinValue;
+            int lastKeptMonthly = -1;
+            int lastKeptYearly = -1;
+
+            foreach (var file in backups)
+            {
+                var date = file.Date!.Value;
+                bool keep = false;
+
+                if (date > DateTime.Now.AddDays(-7))
+                {
+                    if (date.Date != lastKeptDaily)
+                    {
+                        keep = true;
+                        lastKeptDaily = date.Date;
+                    }
+                }
+                else if (date > DateTime.Now.AddDays(-35))
+                {
+                    int diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+                    var weekStart = date.AddDays(-1 * diff).Date;
+                    if (weekStart != lastKeptWeekly)
+                    {
+                        keep = true;
+                        lastKeptWeekly = weekStart;
+                    }
+                }
+                else if (date > DateTime.Now.AddYears(-1))
+                {
+                    if (date.Month != lastKeptMonthly)
+                    {
+                        keep = true;
+                        lastKeptMonthly = date.Month;
+                    }
+                }
+                else
+                {
+                    if (date.Year != lastKeptYearly)
+                    {
+                        keep = true;
+                        lastKeptYearly = date.Year;
+                    }
+                }
+
+                if (!keep)
+                {
+                    filesToDelete.Add(file.Path);
+                }
+            }
+
+            if (filesToDelete.Count > 0)
+            {
+                log("SYSTEM", $"GFS Retention: Purging {filesToDelete.Count} old backup(s)...");
+                foreach (var f in filesToDelete)
+                {
+                    try { File.Delete(f); } catch { }
+                }
+            }
+        }
+        catch (Exception ex) 
+        { 
+            log("WARN", $"GFS Retention purge failed: {ex.Message}"); 
+        }
+    }
+
+    private static DateTime? ParseBackupDate(string filename)
+    {
+        if (!filename.StartsWith("full_backup_") || !filename.EndsWith(".zip")) return null;
+        var dateStr = filename.Substring(12, filename.Length - 16);
+        if (DateTime.TryParseExact(dateStr, "yyyyMMdd_HHmmssfff", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+            return date;
+        return null;
     }
 
     public static void RestoreBackup(SharedState s, string zipPath, Action<string, string> log)
