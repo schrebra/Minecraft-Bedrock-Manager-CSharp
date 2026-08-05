@@ -1,3 +1,4 @@
+
 # Minecraft Bedrock Server Manager (C# / WPF Edition)
 
 A modern, feature-rich desktop application built with .NET 8 and WPF designed to automate the management of the Minecraft Bedrock Dedicated Server on Windows. It wraps the server process, providing a beautiful graphical interface, dual console layout, automated updates, backups, crash recovery, and an integrated web-based configuration editor—optimized for long-term stability (weeks or months of uptime).
@@ -5,8 +6,8 @@ A modern, feature-rich desktop application built with .NET 8 and WPF designed to
 <table>
   <tr>
     <td align="center">
-      <a href="Screenshots/2026-08-01_205117.png">
-        <img src="Screenshots/2026-08-01_205117.png" alt="Minecraft Bedrock Manager Screenshot 1" width="100%" />
+      <a href="Screenshots/2026-08-04_200835.png">
+        <img src="Screenshots/2026-08-04_200835.png" alt="Minecraft Bedrock Manager Screenshot 1" width="100%" />
       </a>
     </td>
     <td align="center">
@@ -32,24 +33,28 @@ A modern, feature-rich desktop application built with .NET 8 and WPF designed to
 - **First-Time Setup:** Automatically downloads the latest Bedrock Server zip from the official Minecraft API, extracts it, and configures the directories.
 - **Auto-Updates:** Periodically checks for new server versions. Can automatically download, backup, and apply updates without manual intervention.
 - **Crash Protection:** Monitors the server process. If the server crashes unexpectedly, the manager waits 10 seconds (to prevent file locks) and automatically restarts it.
+- **Hung Process Detection:** Automatically force-kills and recovers the server process if it hangs for more than 30 seconds during a shutdown.
 
 ### Backup & Restore
 - **Full Backups:** Compresses server configurations (server.properties, allowlist.json, permissions.json) and world files into a single .zip archive.
 - **SHA256 Verification:** Generates a manifest of file hashes during backup. Upon restoration, it verifies every file's checksum to ensure zero corruption before applying the files.
-- **Retention Policy:** Automatically purges old backups to retain only a specified number of recent archives.
+- **GFS Retention Policy:** Automatically purges old backups using a Grandfather-Father-Son (GFS) scheme to save storage space while retaining daily, weekly, monthly, and yearly archives.
+- **Independent Schedules:** Set distinct times and destination paths for local and offsite backups. Scheduled backups gracefully pause the server, run the archive, and restart the server automatically.
+- **Real-Time Tracking:** The dashboard instantly reads actual `.zip` files on disk to display the true last local and offsite backup times.
 
 ### Scheduling & Maintenance
 - **Scheduled Reboots:** Configurable restarts (Daily, Weekly, Biweekly, Monthly) to keep server performance high and clear memory leaks.
 - **Uptime Tracking:** Monitors and displays both PC uptime and Server uptime directly on the dashboard.
 
 ### Network & System Configuration
-- **Firewall Automation:** Automatically creates and manages Windows Firewall rules for the server executable using netsh.
-- **Dependency Checks:** Checks for Administrator privileges and prompts the user to install the Visual C++ Redistributable if it's missing.
+- **Firewall Automation:** Automatically creates and manages Windows Firewall rules for the server executable without spamming recreations on every startup.
+- **Dependency Checks & Admin Relaunch:** Checks for Administrator privileges and includes a one-click "Relaunch as Admin" button. The prompt preference is saved directly to `config.ini`.
 
 ### User Experience
 - **Single-File Portable EXE:** Compiled into a single self-contained executable. No need to install the .NET runtime; just download and run.
-- **Custom Dark Theme:** Features a sleek, custom-built Catppuccin Macchiato dark theme with custom-styled scrollbars, title bar, and controls.
-- **Instant Save:** All settings (root paths, update intervals, backup limits) are saved instantly to a configuration file whenever modified.
+- **Custom Dark Theme & Dialogs:** Features a sleek, custom-built Catppuccin Macchiato dark theme with custom-styled scrollbars, title bars, controls, and custom themed pop-up dialogs.
+- **Instant Save:** Settings are saved efficiently to a configuration file (preventing disk I/O on every keystroke) whenever modified.
+- **UI Polish:** Increased console font size for readability and fixed window maximize border glitches.
 
 ## 🎯 Who is this for?
 
@@ -59,7 +64,7 @@ A modern, feature-rich desktop application built with .NET 8 and WPF designed to
 
 ## 🚀 Why should you use it?
 
-1. **Zero Downtime Worry:** The built-in crash detection and scheduled reboot system ensure your server stays healthy over long periods.
+1. **Zero Downtime Worry:** The built-in crash detection, hung process recovery, and scheduled reboot system ensure your server stays healthy over long periods.
 2. **Safe Updates:** Updating a live server is risky. This manager safely stops the server, performs a verified backup, extracts the new files, and restarts automatically.
 3. **No Command Line Required:** The dual-console layout gives you the power of the raw server console right inside a modern Windows GUI.
 4. **Portable & Clean:** It compiles down to a single .exe file. It doesn't clutter your system with installers or require external runtimes.
