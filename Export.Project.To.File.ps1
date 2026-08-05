@@ -17,8 +17,12 @@ if (Test-Path $outputFile) {
 }
 
 Write-Host "Searching for files..." -ForegroundColor Cyan
+
+# Build a regex pattern to match any excluded directory anywhere in the full path
+ $excludePattern = '\\(' + (($excludeDirs | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')\\'
+
  $files = Get-ChildItem -Recurse -Include $extensions | Where-Object {
-    $excludeDirs -notcontains $_.Directory.Name
+    $_.FullName -notmatch $excludePattern
 } | Sort-Object FullName
 
 Write-Host "Found $($files.Count) files to process." -ForegroundColor Green
@@ -45,4 +49,3 @@ foreach ($file in $files) {
 
 Write-Host "---------------------------------------------------------"
 Write-Host "Project successfully exported to $outputFile" -ForegroundColor Green
-Write-Host "You can now copy the contents of $outputFile and paste it to the AI." -ForegroundColor Cyan

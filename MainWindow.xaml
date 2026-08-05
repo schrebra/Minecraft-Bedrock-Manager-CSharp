@@ -7,7 +7,7 @@
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized" WindowStyle="None"
         Background="#24273A"
-        FontFamily="pack://application:,,,/Fonts/#NOTOSANSMONO-REGULAR"
+        FontFamily="pack://application:,,,/Fonts/#NOTOSANSMONO-REGULAR, Segoe UI Emoji"
         Icon="pack://application:,,,/minecraft.ico">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="32" ResizeBorderThickness="6" CornerRadius="0" GlassFrameThickness="0" UseAeroCaptionButtons="False"/>
@@ -191,7 +191,7 @@
             </Setter>
         </Style>
         <Style x:Key="ActionButton" TargetType="Button">
-            <Setter Property="FontFamily" Value="pack://application:,,,/Fonts/#NOTOSANS-REGULAR"/>
+            <Setter Property="FontFamily" Value="pack://application:,,,/Fonts/#NOTOSANS-REGULAR, Segoe UI Emoji"/>
             <Setter Property="Foreground" Value="#24273A"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="11"/>
@@ -311,7 +311,8 @@
             <!-- Row 0: Root Directory & Scheduled Indicators -->
             <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
@@ -319,11 +320,11 @@
                 </Grid.ColumnDefinitions>
                 
                 <!-- Root Directory -->
-                <Border Grid.Column="0" Style="{StaticResource Card}" VerticalAlignment="Center">
+                <Border Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource Card}" VerticalAlignment="Center">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="300"/>
+                            <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
@@ -335,7 +336,7 @@
                 </Border>
 
                 <!-- Next Scheduled Reboot -->
-                <Border Grid.Column="1" Style="{StaticResource Card}" VerticalAlignment="Center">
+                <Border Grid.Column="2" Style="{StaticResource Card}" VerticalAlignment="Center">
                     <StackPanel>
                         <TextBlock Text="NEXT SCHEDULED REBOOT" Style="{StaticResource StatLabel}"/>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -346,7 +347,7 @@
                 </Border>
 
                 <!-- Next Local Backup -->
-                <Border Grid.Column="2" Style="{StaticResource Card}" VerticalAlignment="Center">
+                <Border Grid.Column="3" Style="{StaticResource Card}" VerticalAlignment="Center">
                     <StackPanel>
                         <TextBlock Text="NEXT LOCAL BACKUP" Style="{StaticResource StatLabel}"/>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -357,7 +358,7 @@
                 </Border>
 
                 <!-- Next Offsite Backup -->
-                <Border Grid.Column="3" Style="{StaticResource Card}" VerticalAlignment="Center">
+                <Border Grid.Column="4" Style="{StaticResource Card}" VerticalAlignment="Center">
                     <StackPanel>
                         <TextBlock Text="NEXT OFFSITE BACKUP" Style="{StaticResource StatLabel}"/>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -368,7 +369,7 @@
                 </Border>
 
                 <!-- Next Scheduled Update Check -->
-                <Border Grid.Column="4" Style="{StaticResource Card}" VerticalAlignment="Center">
+                <Border Grid.Column="5" Style="{StaticResource Card}" VerticalAlignment="Center">
                     <StackPanel>
                         <TextBlock Text="NEXT SCHEDULED UPDATE CHECK" Style="{StaticResource StatLabel}"/>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -562,15 +563,60 @@
             <!-- Row 3: Action Buttons -->
             <Border Grid.Row="3" Style="{StaticResource Card}">
                 <WrapPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <Button x:Name="btnFirstSetup" Content="🛠 Setup / Install" Background="{StaticResource AccentBlue}" Style="{StaticResource ActionButton}"/>
-                    <Button x:Name="btnCheckUpdate" Content="🔄 Check Updates" Background="{StaticResource AccentBlue}" Style="{StaticResource ActionButton}"/>
-                    <Button x:Name="btnUpdate" Content="⬇ Download and Update" Background="{StaticResource AccentGreen}" Style="{StaticResource ActionButton}" IsEnabled="False"/>
-                    <Button x:Name="btnStartServer" Content="▶ Start Server" Background="{StaticResource AccentGreen}" Style="{StaticResource ActionButton}"/>
-                    <Button x:Name="btnStopServer" Content="⏹ Stop Server" Background="{StaticResource AccentRed}" Style="{StaticResource ActionButton}"/>
-                    <Button x:Name="btnRefresh" Content="🔄 Refresh Status" Background="{StaticResource AccentOrange}" Style="{StaticResource ActionButton}"/>
-                    <Button x:Name="btnBackupNow" Content="💾 Backup Now" Background="{StaticResource AccentGray}" Foreground="#CAD3F5" Style="{StaticResource ActionButton}" IsEnabled="False"/>
-                    <Button x:Name="btnRestoreBackup" Content="⏪ Restore Backup" Background="{StaticResource AccentGray}" Foreground="#CAD3F5" Style="{StaticResource ActionButton}" IsEnabled="False"/>
-                    <Button x:Name="btnEditConfig" Content="📝 Server.properties Editor" Background="{StaticResource AccentMauve}" Foreground="#24273A" Style="{StaticResource ActionButton}"/>
+                    <Button x:Name="btnFirstSetup" Background="{StaticResource AccentBlue}" Style="{StaticResource ActionButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="&#xE713;" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="Setup / Install" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="btnCheckUpdate" Background="{StaticResource AccentBlue}" Style="{StaticResource ActionButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="&#xE721;" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="Check Updates" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="btnUpdate" Background="{StaticResource AccentGreen}" Style="{StaticResource ActionButton}" IsEnabled="False">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="&#xE896;" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="Download and Update" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="btnStartServer" Background="{StaticResource AccentGreen}" Style="{StaticResource ActionButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="&#xE768;" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="Start Server" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="btnStopServer" Background="{StaticResource AccentRed}" Style="{StaticResource ActionButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="&#xE71A;" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="Stop Server" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="btnRefresh" Background="{StaticResource AccentOrange}" Style="{StaticResource ActionButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="&#xE72C;" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="Refresh Status" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="btnBackupNow" Background="{StaticResource AccentGray}" Foreground="#CAD3F5" Style="{StaticResource ActionButton}" IsEnabled="False">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="&#xE74E;" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="Backup Now" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="btnRestoreBackup" Background="{StaticResource AccentGray}" Foreground="#CAD3F5" Style="{StaticResource ActionButton}" IsEnabled="False">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="&#xE8CB;" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="Restore Backup" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="btnEditConfig" Background="{StaticResource AccentMauve}" Foreground="#24273A" Style="{StaticResource ActionButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="&#xE70F;" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="Server.properties Editor" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </WrapPanel>
             </Border>
             

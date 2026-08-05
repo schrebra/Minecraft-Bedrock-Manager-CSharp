@@ -1,7 +1,7 @@
 <Window x:Class="BedrockServerManager.ScheduleRebootWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Configure Scheduled Reboot" Height="320" Width="425"
+        Title="Configure Scheduled Reboot" Height="320" Width="450"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Background="#24273A"
         FontFamily="pack://application:,,,/Fonts/#NOTOSANSMONO-REGULAR">
     <Window.Resources>
