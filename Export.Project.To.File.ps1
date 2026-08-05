@@ -1,7 +1,7 @@
 # Export-Project.ps1
 # Run this in your project root directory
 
- $outputFile = "BedrockServerManager_FullSource.txt"
+ $outputFile = ".\BedrockServerManager_FullSource.txt"
  $extensions = @("*.cs", "*.xaml", "*.csproj", "*.manifest")
  $excludeDirs = @("bin", "obj", ".vs")
 
@@ -31,6 +31,7 @@ Write-Host "---------------------------------------------------------"
  $delimiter = "========================================================="
 
 foreach ($file in $files) {
+    # Calculate path relative to the current directory
     $relativePath = $file.FullName.Replace((Get-Location).Path + "\", "")
     
     Write-Host " -> Processing: $relativePath" -ForegroundColor White
@@ -40,8 +41,8 @@ foreach ($file in $files) {
     Add-Content -Path $outputFile -Value $delimiter
     Add-Content -Path $outputFile -Value ""
     
-    # Read content and write to file
-    $content = Get-Content $file.FullName
+    # Read content as a single string to preserve exact formatting
+    $content = Get-Content $file.FullName -Raw
     Add-Content -Path $outputFile -Value $content
     
     Add-Content -Path $outputFile -Value "`n`n"

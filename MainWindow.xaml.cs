@@ -68,6 +68,34 @@ public partial class MainWindow : Window
         HookTitleBar();
         HookSettingsAutoSave();
         HookButtons();
+        HookConsoleScrolling();
+    }
+
+    private void HookConsoleScrolling()
+    {
+        // Slow down mouse-wheel / trackpad scrolling to a smooth medium pace.
+        // Default WPF scrolls 3 lines per notch (roughly 48px).
+        // This implementation scrolls 24px per notch (e.Delta / 5.0),
+        // making it 2x slower than default but fast enough to be usable.
+        rtbLog.PreviewMouseWheel       += Rtb_PreviewMouseWheel;
+        rtbServerLog.PreviewMouseWheel += Rtb_PreviewMouseWheel;
+
+        // When the user re-checks auto-scroll, jump straight to the bottom
+        chkAutoScrollManager.Checked += (_, _) => rtbLog.ScrollToEnd();
+        chkAutoScrollServer.Checked  += (_, _) => rtbServerLog.ScrollToEnd();
+    }
+
+    private void Rtb_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (sender is System.Windows.Controls.RichTextBox rtb)
+        {
+            e.Handled = true;
+            
+            // e.Delta is typically 120 per mouse wheel notch.
+            // Dividing by 5.0 results in a 24-pixel scroll per notch.
+            double change = e.Delta / 5.0;
+            rtb.ScrollToVerticalOffset(rtb.VerticalOffset - change);
+        }
     }
 
     private void InitializeUiState()
@@ -266,7 +294,8 @@ public partial class MainWindow : Window
             }
         }
         TrimBlocks(rtbLog, 500);
-        rtbLog.ScrollToEnd();
+        if (chkAutoScrollManager.IsChecked == true)
+            rtbLog.ScrollToEnd();
 
         int srvCount = Math.Min(100, _state.ServerConsoleMessages.Count);
         for (int i = 0; i < srvCount; i++)
@@ -296,7 +325,8 @@ public partial class MainWindow : Window
             while (_state.ServerOutputReader.ErrorQueue.TryDequeue(out var line))
                 AppendParagraph(rtbServerLog, line, _serverBrushCache["ERROR"]);
             TrimBlocks(rtbServerLog, _state.MaxServerConsoleLines);
-            rtbServerLog.ScrollToEnd();
+            if (chkAutoScrollServer.IsChecked == true)
+                rtbServerLog.ScrollToEnd();
         }
 
         while (_state.PendingServerCommands.TryDequeue(out var cmd))

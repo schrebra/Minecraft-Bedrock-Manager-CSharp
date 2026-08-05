@@ -648,9 +648,14 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="Manager Console" Foreground="{StaticResource TextPrimary}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Margin="5,0,0,0"/>
-                                <Button Grid.Column="1" x:Name="btnClearLog" Content="Clear" Background="{StaticResource AccentGray}" Foreground="#CAD3F5" Style="{StaticResource ActionButton}" Padding="10,4"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                                    <CheckBox x:Name="chkAutoScrollManager" IsChecked="True" VerticalAlignment="Center" Cursor="Hand" Padding="0"/>
+                                    <TextBlock Text="Auto-scroll" Foreground="{StaticResource TextSecondary}" FontSize="11" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                </StackPanel>
+                                <Button Grid.Column="2" x:Name="btnClearLog" Content="Clear" Background="{StaticResource AccentGray}" Foreground="#CAD3F5" Style="{StaticResource ActionButton}" Padding="10,4"/>
                             </Grid>
                         </Border>
                         <RichTextBox x:Name="rtbLog" Grid.Row="1" Background="#1E2030" Foreground="#CAD3F5" BorderThickness="0" IsReadOnly="True" VerticalScrollBarVisibility="Auto" FontSize="13" Padding="8,6">
@@ -676,9 +681,14 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="Server Console (stdin/stdout)" Foreground="{StaticResource TextPrimary}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Margin="5,0,0,0"/>
-                                <Button Grid.Column="1" x:Name="btnClearServerLog" Content="Clear" Background="{StaticResource AccentGray}" Foreground="#CAD3F5" Style="{StaticResource ActionButton}" Padding="10,4"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                                    <CheckBox x:Name="chkAutoScrollServer" IsChecked="True" VerticalAlignment="Center" Cursor="Hand" Padding="0"/>
+                                    <TextBlock Text="Auto-scroll" Foreground="{StaticResource TextSecondary}" FontSize="11" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                </StackPanel>
+                                <Button Grid.Column="2" x:Name="btnClearServerLog" Content="Clear" Background="{StaticResource AccentGray}" Foreground="#CAD3F5" Style="{StaticResource ActionButton}" Padding="10,4"/>
                             </Grid>
                         </Border>
                         <RichTextBox x:Name="rtbServerLog" Grid.Row="1" Background="#181926" Foreground="#CAD3F5" BorderThickness="0" IsReadOnly="True" VerticalScrollBarVisibility="Auto" FontSize="13" Padding="8,6">
